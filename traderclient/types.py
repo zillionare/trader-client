@@ -1,0 +1,2 @@
+class TradeType:
+    pass

@@ -106,3 +106,4 @@ ENV/
 
 # mkdocs build dir
 site/
+.history
