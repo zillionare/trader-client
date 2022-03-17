@@ -7,20 +7,23 @@ from typing import Dict, List
 import arrow
 
 from traderclient.transport import get, post_json
+from traderclient.utils import stock_name
 
 logger = logging.getLogger(__name__)
 
 
 class TradeClient:
-    def __init__(self, url: str, token: str):
+    def __init__(self, url: str, acct: str, token: str):
         """构建一个交易客户端
 
         Args:
             url : 服务器地址及路径，比如 http://localhost:port/trade/api/v1
-            token : _description_
+            acct: 子账号
+            token : 子账号对应的服务器访问令牌
         """
         self._url = url.rstrip("/")
         self.token = token
+        self.account = acct
         self.headers = {"Authorization": f"Token {self.token}"}
 
     def _cmd_url(self, cmd: str) -> str:
@@ -192,8 +195,11 @@ if __name__ == "__main__":
     from traderclient.utils import enable_logging
 
     enable_logging("info")
-    url = "http://localhost:7080/backtest/api/trade/v0.1"
-    client = TradeClient(url, "abcd")
+    url = "http://192.168.100.19:9000/backtest/api/trade/v0.1"
+    acct = "仿真_张三_策略1"
+    token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
+    client = TradeClient(url, acct, token)
+
     date = datetime.datetime(2022, 3, 1, 9, 35)
-    r = client.buy("002537.XSHE", 9.8, 100, order_time=date.isoformat())
-    print(r)
+    rsp = client.buy(stock_name("002537"), 9.8, 100, order_time=date.isoformat())
+    print(rsp)
