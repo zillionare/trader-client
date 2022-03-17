@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 import requests
 
@@ -80,6 +81,8 @@ def get(url, params=None, headers=None):
     Returns:
         根据返回头的content-type，分别返回json, text或者bytes
     """
+    headers.update({"Request-ID": uuid.uuid4().hex})
+
     r = requests.get(url, params=params, headers=headers)
     return get_result(r, get_cmd(url))
 
@@ -95,6 +98,7 @@ def post_json(url, payload=None, headers=None):
     Returns:
         根据返回头的content-type，分别返回json, text或者bytes
     """
-    r = requests.post(url, data=payload, headers=headers)
+    headers.update({"Request-ID": uuid.uuid4().hex})
+    r = requests.post(url, json=payload, headers=headers)
 
     return get_result(r, get_cmd(url))

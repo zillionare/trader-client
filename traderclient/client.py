@@ -6,8 +6,7 @@ from typing import Dict, List
 
 import arrow
 
-from traderclient.transport import get, post
-from traderclient.types import TradeType
+from traderclient.transport import get, post_json
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +21,7 @@ class TradeClient:
         """
         self._url = url.rstrip("/")
         self.token = token
-        self.headers = {
-            "Authorization": f"Token {self.token}",
-            "Request-ID": uuid.uuid4().hex,
-        }
+        self.headers = {"Authorization": f"Token {self.token}"}
 
     def _cmd_url(self, cmd: str) -> str:
         return f"{self._url}/{cmd}"
@@ -53,12 +49,20 @@ class TradeClient:
         if info is None:
             return None
 
+        start = info.get("start", None)
+        if start is not None:
+            start = arrow.get(start).date()
+
+        end = info.get("end", None)
+        if end is not None:
+            end = arrow.get(end).date()
+
         return {
             "name": info["name"],
             "assets": info["assets"],
             "capital": info["capital"],
-            "start": arrow.get(info["start"]).date(),
-            "last_trade": arrow.get(info["end"]).date(),
+            "start": start,
+            "last_trade": end,
             "trades": info["trades"],
         }
 
@@ -76,7 +80,7 @@ class TradeClient:
         else:
             return b
 
-    def buy(self, code: str, price: float, volume: float) -> Dict:
+    def buy(self, code: str, price: float, volume: float, **kwargs) -> Dict:
         """买入股票
 
         Args:
@@ -89,9 +93,9 @@ class TradeClient:
             logger.warning("买入数量必须是100的倍数, 已取整到%d", volume)
 
         url = self._cmd_url("buy")
-        data = {"code": code, "price": price, "volume": volume}
+        data = {"code": code, "price": price, "volume": volume, **kwargs}
 
-        return post(url, json=data, headers=self.headers)
+        return post_json(url, payload=data, headers=self.headers)
 
     def available_money(self) -> float:
         """返回当前可用资金
@@ -122,7 +126,7 @@ class TradeClient:
         """
         url = self._cmd_url("available_shares")
         data = {"code": code}
-        shares = get(url, json=data, headers=self.headers)
+        shares = get(url, params=data, headers=self.headers)
         return shares
 
     def today_entrusts(self) -> List:
@@ -141,7 +145,7 @@ class TradeClient:
         self,
         security: str,
         volume: int,
-        ttype: TradeType = None,
+        ttype=None,
         limit_price: float = None,
         timeout: float = 0.5,
         **kwargs,
@@ -159,7 +163,7 @@ class TradeClient:
         self,
         security: str,
         volume: int,
-        ttype: TradeType = None,
+        ttype=None,
         limit_price: float = None,
         timeout: float = 0.5,
         **kwargs,
@@ -182,3 +186,14 @@ class TradeClient:
 
     def get_entrusts_in_range(self, start: datetime.date, end: datetime.date) -> List:
         raise NotImplementedError
+
+
+if __name__ == "__main__":
+    from traderclient.utils import enable_logging
+
+    enable_logging("info")
+    url = "http://localhost:7080/backtest/api/trade/v0.1"
+    client = TradeClient(url, "abcd")
+    date = datetime.datetime(2022, 3, 1, 9, 35)
+    r = client.buy("002537.XSHE", 9.8, 100, order_time=date.isoformat())
+    print(r)
