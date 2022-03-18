@@ -6,28 +6,19 @@ import logging
 from traderclient import TradeClient
 
 
-def enable_logging(level: str = "info"):
+def init_logging(level=logging.INFO):
     logger = logging.getLogger()
 
     handler = logging.StreamHandler()
-    formatter = logging.Formatter(fmt="------%(message)s")
+    formatter = logging.Formatter(fmt="---%(message)s")
     handler.setFormatter(formatter)
 
     logger.addHandler(handler)
-
-    level = {
-        "debug": logging.DEBUG,
-        "info": logging.INFO,
-        "warning": logging.WARNING,
-        "error": logging.ERROR,
-        "critical": logging.CRITICAL,
-    }.get(level.lower(), logging.INFO)
-
     logger.setLevel(level)
 
 
 if __name__ == "__main__":
-    enable_logging("info")
+    init_logging(logging.DEBUG)
 
     url = "http://192.168.100.19:9000/backtest/api/trade/v0.1"
     acct = "仿真_张三_策略1"
