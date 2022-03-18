@@ -15,11 +15,11 @@ from traderclient.trade import (
 )
 
 __all__ = (
+    TradeClient,
     OrderStatus,
     OrderSide,
     BidType,
     TradeOrder,
     OrderRequest,
     OrderResponse,
-    TradeClient,
 )

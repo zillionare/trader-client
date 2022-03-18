@@ -24,20 +24,6 @@ class OrderStatus(IntEnum):
     CANCEL_ALL_ORDERS = 4  # 全部撤单
 
 
-def stock_name(code: str):
-    # code: 002537
-    # return "002537.XSHE
-
-    if code is None or len(code) != 6:
-        return "000000.XXXX"
-    if code[0] == "0":
-        return f"{code}.XSHE"
-    if code[0] == "6":
-        return f"{code}.XSHG"
-
-    return "000000.XXXX"
-
-
 class OrderRequest:
     request_id: str  # 交易请求号，客户端自行生成，每笔交易的唯一识别号
     code: str  # 股票代码，输入时填数字即可，自动转换
@@ -83,7 +69,7 @@ class TradeOrder:
     order_rsp: OrderResponse  # 委托信息
 
     def __init__(self, code: str, volume: int, price: float = 0):
-        self.order_req = OrderRequest(stock_name(code), price, volume)
+        self.order_req = OrderRequest(code, price, volume)
         self.order_rsp = OrderResponse()
 
     def set_limit_price(self, limit_price: float):
@@ -95,11 +81,11 @@ class TradeOrder:
             "code": self.order_req.code,
             "price": self.order_req.price,
             "volume": self.order_req.volume,
-            "order_side": self.order_req.order_side,
-            "bid_type": self.order_req.bid_type,
+            "order_side": int(self.order_req.order_side),
+            "bid_type": int(self.order_req.bid_type),
             "created_at": self.order_req.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "entrust_id": self.order_rsp.entrust_id,
-            "order_status": self.order_rsp.order_status,
+            "order_status": int(self.order_rsp.order_status),
             "avg_price": self.order_rsp.avg_price,
             "filled_vol": self.order_rsp.filled_vol,
             "filled_amount": self.order_rsp.filled_amount,

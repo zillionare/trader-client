@@ -13,7 +13,6 @@ from traderclient.trade import (
     OrderSide,
     OrderStatus,
     TradeOrder,
-    stock_name,
 )
 from traderclient.transport import get, post_json
 
@@ -33,24 +32,58 @@ class TradeClient:
         self.token = token
         self.account = acct
         self.headers = {"Authorization": f"Token {self.token}"}
+        self.order = None
 
     def _cmd_url(self, cmd: str) -> str:
         return f"{self._url}/{cmd}"
 
+    def set_trade_entrust(self, code: str, volume: int, price: float = 0):
+        self.order = TradeOrder(code, volume, price)
+        return self.order
+
+    def get_trade_order(self):
+        return self.order
+
     def handle_failure_response(self, result: Dict):
-        """_summary_
+        """处理状态不为0的响应信息，暂时只记入日志
 
         Args:
-            result : _description_
+            result : 上游服务返回的字典数据
         """
+
         if result["status"] != 0:
             logger.error(
-                "调用失败，状态码: %s, 错误信息：%s, extra info: %s",
+                "exec failed, status: %d, error msg: %s, extra info: %s",
                 result["status"],
                 result["msg"],
                 result.get("data", ""),
             )
-            return None
+
+        return None
+
+    def update_trade_info(self, data: Dict):
+        """从上游服务返回数据中加载委托的执行信息
+
+        Args:
+            data (Dict): {'status':0, 'msg':'OK', 'data': data}中的data
+        """
+
+        order_response = self.order.order_rsp
+
+        # 委托号，委托状态（2部分成交，3全部成交）
+        order_response.entrust_id = data["cid"]
+        order_response.order_status = data["status"]
+
+        # 成交均价，成交量，成交额，手续费（包含佣金、印花税、杂费）
+        order_response.avg_price = data["price"]
+        order_response.filled_vol = data["volume"]
+        order_response.filled_amount = data["value"]
+        order_response.commission = data["trade_fees"]
+
+        # 带毫秒的时间信息
+        order_response.updated_at = datetime.datetime.strptime(
+            data["date"], "%Y-%m-%d %H:%M:%S.%f"
+        )
 
     def info(self) -> Dict:
         """获取账户信息"""
@@ -157,7 +190,7 @@ class TradeClient:
             _description_
         """
         url = self._cmd_url("available_shares")
-        data = {"code": stock_name(code)}
+        data = {"code": code}
 
         result = post_json(url, payload=data, headers=self.headers)
         if result is None:
@@ -235,124 +268,105 @@ class TradeClient:
 
         return result
 
-    def buy(self, order: TradeOrder, **kwargs) -> Dict:
+    def trade_operation(self, url: str, timeout: float, **kwargs):
+        order_request = self.order.order_req
+        self.headers.update({"Request-ID": order_request.request_id})
+
+        # 更新操作时间戳
+        order_request.created_at = datetime.datetime.now()
+        order_time = order_request.created_at.strftime("%Y-%m-%d %H:%M:%S")
+
+        # 设置payload
+        data = {
+            "code": order_request.code,
+            "price": order_request.price,
+            "volume": order_request.volume,
+            "order_time": order_time,
+            "timeout": timeout,
+            **kwargs,
+        }
+
+        result = post_json(url, payload=data, headers=self.headers)
+        if result is None:
+            return None
+
+        status = result["status"]
+        if status != 0:
+            return self.handle_failure_response()
+
+        data = result["data"]
+        # 更新委托信息
+        self.update_trade_info(data)
+
+        return result
+
+    def buy(self, timeout: float = 0.5, **kwargs) -> Dict:
         """买入股票
 
         Args:
-            order : 委托信息
+            timeout : 等待交易接口返回的超时设定，默认0.5秒
         """
-
-        order_request = order.order_req
-
+        order_request = self.order.order_req
         volume = order_request.volume
         if volume != volume // 100 * 100:
             volume = volume // 100 * 100
             logger.warning("买入数量必须是100的倍数, 已取整到%d", volume)
 
         url = self._cmd_url("buy")
-
-        # 更新买入时间戳
-        order_request.created_at = datetime.datetime.now()
-        order_time = order_request.created_at.strftime("%Y-%m-%d %H:%M:%S")
-
         order_request.order_side = OrderSide.BUY
         order_request.bid_type = BidType.LIMIT
-        data = {
-            "code": order_request.code,
-            "price": order_request.price,
-            "volume": order_request.volume,
-            "order_time": order_time,
-            **kwargs,
-        }
 
-        return post_json(url, payload=data, headers=self.headers)
+        return self.trade_operation(url, timeout)
 
-    def market_buy(
-        self,
-        order: TradeOrder,
-        timeout: float = 0.5,
-        **kwargs,
-    ) -> Dict:
-        order_request = order.order_req
+    def market_buy(self, timeout: float = 0.5, **kwargs) -> Dict:
+        """市价买入股票，同花顺终端需要改为涨跌停限价，掘金客户端支持市价交易，掘金系统默认五档成交剩撤
 
+        Args:
+            timeout : 等待交易接口返回的超时设定，默认0.5秒
+        """
+        order_request = self.order.order_req
         volume = order_request.volume
         if volume != volume // 100 * 100:
             volume = volume // 100 * 100
             logger.warning("买入数量必须是100的倍数, 已取整到%d", volume)
 
         url = self._cmd_url("market_buy")
-
-        # 更新买入时间戳
-        order_request.created_at = datetime.datetime.now()
-        order_time = order_request.created_at.strftime("%Y-%m-%d %H:%M:%S")
-
         order_request.order_side = OrderSide.BUY
         order_request.bid_type = BidType.MARKET
-        data = {
-            "code": order_request.code,
-            "price": order_request.price,
-            "volume": order_request.volume,
-            "order_time": order_time,
-            "timeout": timeout,
-            **kwargs,
-        }
 
-        return post_json(url, payload=data, headers=self.headers)
+        return self.trade_operation(url, timeout)
 
-    def sell(self, order: TradeOrder, timeout: float = 0.5, **kwargs) -> Dict:
-        order_request = order.order_req
+    def sell(self, timeout: float = 0.5, **kwargs) -> Dict:
+        """以限价方式卖出股票
+
+        Args:
+            timeout : 等待交易接口返回的超时设定，默认0.5秒
+        """
+        order_request = self.order.order_req
 
         # 卖出数量可以是零头
-        volume = order_request.volume
 
         url = self._cmd_url("sell")
-
-        # 更新时间戳
-        order_request.created_at = datetime.datetime.now()
-        order_time = order_request.created_at.strftime("%Y-%m-%d %H:%M:%S")
-
         order_request.order_side = OrderSide.BUY
         order_request.bid_type = BidType.LIMIT
-        data = {
-            "code": order_request.code,
-            "price": order_request.price,
-            "volume": volume,
-            "order_time": order_time,
-            "timeout": timeout,
-            **kwargs,
-        }
 
-        return post_json(url, payload=data, headers=self.headers)
+        return self.trade_operation(url, timeout)
 
-    def market_sell(
-        self,
-        order: TradeOrder,
-        timeout: float = 0.5,
-        **kwargs,
-    ) -> Dict:
-        order_request = order.order_req
+    def market_sell(self, timeout: float = 0.5, **kwargs) -> Dict:
+        """市价卖出股票，同花顺终端需要改为涨跌停限价，掘金客户端支持市价交易，掘金系统默认五档成交剩撤
+
+        Args:
+            timeout : 等待交易接口返回的超时设定，默认0.5秒
+        """
+        order_request = self.order.order_req
 
         # 卖出数量可以是零头
-        volume = order_request.volume
 
         url = self._cmd_url("market_sell")
-
-        # 更新时间戳
-        order_request.created_at = datetime.datetime.now()
-        order_time = order_request.created_at.strftime("%Y-%m-%d %H:%M:%S")
-
         order_request.order_side = OrderSide.SELL
         order_request.bid_type = BidType.MARKET
-        data = {
-            "code": order_request.code,
-            "price": order_request.price,
-            "volume": volume,
-            "order_time": order_time,
-            "timeout": timeout,
-            **kwargs,
-        }
 
-        return post_json(url, payload=data, headers=self.headers)
+        return self.trade_operation(url, timeout)
 
     def sell_percent(
         self, security: str, price: float, percent: float, time_out: int = 0.5
@@ -369,7 +383,3 @@ class TradeClient:
 
     def get_entrusts_in_range(self, start: datetime.date, end: datetime.date) -> List:
         raise NotImplementedError
-
-
-if __name__ == "__main__":
-    pass

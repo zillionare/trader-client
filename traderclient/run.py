@@ -21,7 +21,7 @@ def enable_logging(level: str = "info"):
     logger = logging.getLogger()
 
     handler = logging.StreamHandler()
-    formatter = logging.Formatter("%(message)s")
+    formatter = logging.Formatter(fmt="------%(message)s")
     handler.setFormatter(formatter)
 
     logger.addHandler(handler)
@@ -88,12 +88,27 @@ if __name__ == "__main__":
 
     # test buy
     print("\n------------- buy --------------")
-    order = TradeOrder("002537", 200, 9.9)
-    rsp = client.buy(order)
-    print(rsp)
+    order = client.set_trade_entrust("002537.XSHE", 200, 9.9)
+    rsp = client.buy()
+    print(order.toDict())
+
+    """
 
     print("\n------------- market_buy --------------")
-    order = TradeOrder("002537", 200, 9.9)
+    order = client.set_trade_entrust("002537.XSHE", 200, 9.9)
     order.set_limit_price(10.11)
-    rsp = client.market_buy(order)
+    rsp = client.market_buy()
     print(rsp)
+
+    print("\n------------- sell --------------")
+    order = client.set_trade_entrust("002537.XSHE", 200, 9.9)
+    rsp = client.sell()
+    print(rsp)
+
+    print("\n------------- market_sell ---------------")
+    order = client.set_trade_entrust("002537.XSHE", 200, 9.9)
+    order.set_limit_price(10.11)
+    rsp = client.market_sell()
+    print(rsp)
+
+    """
