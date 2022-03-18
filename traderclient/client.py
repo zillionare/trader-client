@@ -38,10 +38,22 @@ class TradeClient:
         return f"{self._url}/{cmd}"
 
     def set_trade_entrust(self, code: str, volume: int, price: float = 0):
+        """构建新的委托信息，之前的委托对象会扔弃（重新初始化）
+
+        Args:
+            code (str): 股票代码
+            volume (int): 委托量
+            price (float, optional): 委托价格，市价委托时一般为0
+
+        Returns:
+            TradeOrder: 返回新建的委托对象
+        """
         self.order = TradeOrder(code, volume, price)
         return self.order
 
     def get_trade_order(self):
+        # 通常情况下无需使用此方法返回委托对象
+
         return self.order
 
     def handle_failure_response(self, result: Dict):

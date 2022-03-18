@@ -72,6 +72,8 @@ if __name__ == "__main__":
     rsp = client.buy()
     print(order.toDict())
 
+    print(order.order_req.code)
+
     """
 
     print("\n------------- market_buy --------------")
