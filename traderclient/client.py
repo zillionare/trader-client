@@ -6,8 +6,16 @@ from typing import Dict, List
 
 import arrow
 
+from traderclient.trade import (
+    BidType,
+    OrderRequest,
+    OrderResponse,
+    OrderSide,
+    OrderStatus,
+    TradeOrder,
+    stock_name,
+)
 from traderclient.transport import get, post_json
-from traderclient.utils import stock_name
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +26,7 @@ class TradeClient:
 
         Args:
             url : 服务器地址及路径，比如 http://localhost:port/trade/api/v1
-            acct: 子账号
+            acct : 子账号
             token : 子账号对应的服务器访问令牌
         """
         self._url = url.rstrip("/")
@@ -47,16 +55,23 @@ class TradeClient:
     def info(self) -> Dict:
         """获取账户信息"""
         url = self._cmd_url("info")
-        info = get(url, headers=self.headers)
+        result = get(url, headers=self.headers)
 
-        if info is None:
+        if result is None:
+            logger.error("cannot get account information")
             return None
 
+        status = result["status"]
+        if status != 0:
+            logger.error("failed to get account information")
+            return None
+
+        info = result["data"]
         start = info.get("start", None)
         if start is not None:
             start = arrow.get(start).date()
 
-        end = info.get("end", None)
+        end = info.get("last_trade", None)
         if end is not None:
             end = arrow.get(end).date()
 
@@ -76,29 +91,19 @@ class TradeClient:
             _description_
         """
         url = self._cmd_url("balance")
-        b = get(url, headers=self.headers)
+        result = get(url, headers=self.headers)
 
-        if b is None:
+        if result is None:
+            logger.error("cannot get balance information")
             return None
-        else:
-            return b
 
-    def buy(self, code: str, price: float, volume: float, **kwargs) -> Dict:
-        """买入股票
+        status = result["status"]
+        if status != 0:
+            logger.error("failed to get balance information")
+            return None
 
-        Args:
-            code : 股票代码
-            price : 买入价格
-            volume : 买入数量
-        """
-        if volume != volume // 100 * 100:
-            volume = volume // 100 * 100
-            logger.warning("买入数量必须是100的倍数, 已取整到%d", volume)
-
-        url = self._cmd_url("buy")
-        data = {"code": code, "price": price, "volume": volume, **kwargs}
-
-        return post_json(url, payload=data, headers=self.headers)
+        info = result["data"]
+        return info
 
     def available_money(self) -> float:
         """返回当前可用资金
@@ -106,8 +111,20 @@ class TradeClient:
         Returns:
             _description_
         """
-        cash = get(self._cmd_url("available_money"), headers=self.headers)
-        return cash
+        url = self._cmd_url("available_money")
+        result = get(url, headers=self.headers)
+
+        if result is None:
+            logger.error("cannot get available money")
+            return None
+
+        status = result["status"]
+        if status != 0:
+            logger.error("failed to get available money")
+            return None
+
+        info = result["data"]
+        return info
 
     def positions(self) -> List:
         """返回当前持仓
@@ -115,7 +132,19 @@ class TradeClient:
         Returns:
             _description_
         """
-        positions = get(self._cmd_url("positions"), headers=self.headers)
+        url = self._cmd_url("positions")
+        result = get(url, headers=self.headers)
+
+        if result is None:
+            logger.error("cannot get available money")
+            return None
+
+        status = result["status"]
+        if status != 0:
+            logger.error("failed to get available money")
+            return None
+
+        positions = result["data"]
         return positions
 
     def available_shares(self, code: str = None) -> List:
@@ -128,8 +157,19 @@ class TradeClient:
             _description_
         """
         url = self._cmd_url("available_shares")
-        data = {"code": code}
-        shares = get(url, params=data, headers=self.headers)
+        data = {"code": stock_name(code)}
+
+        result = post_json(url, payload=data, headers=self.headers)
+        if result is None:
+            logger.error("cannot get available shares")
+            return None
+
+        status = result["status"]
+        if status != 0:
+            logger.error("failed to get available shares")
+            return None
+
+        shares = result["data"]
         return shares
 
     def today_entrusts(self) -> List:
@@ -144,35 +184,124 @@ class TradeClient:
     def cancel_all_entrusts(self) -> Dict:
         raise NotImplementedError
 
+    def buy(self, order: TradeOrder, **kwargs) -> Dict:
+        """买入股票
+
+        Args:
+            order : 委托信息
+        """
+
+        order_request = order.order_req
+
+        volume = order_request.volume
+        if volume != volume // 100 * 100:
+            volume = volume // 100 * 100
+            logger.warning("买入数量必须是100的倍数, 已取整到%d", volume)
+
+        url = self._cmd_url("buy")
+
+        # 更新买入时间戳
+        order_request.created_at = datetime.datetime.now()
+        order_time = order_request.created_at.strftime("%Y-%m-%d %H:%M:%S")
+
+        order_request.order_side = OrderSide.BUY
+        order_request.bid_type = BidType.LIMIT
+        data = {
+            "code": order_request.code,
+            "price": order_request.price,
+            "volume": order_request.volume,
+            "order_time": order_time,
+            **kwargs,
+        }
+
+        return post_json(url, payload=data, headers=self.headers)
+
     def market_buy(
         self,
-        security: str,
-        volume: int,
-        ttype=None,
-        limit_price: float = None,
+        order: TradeOrder,
         timeout: float = 0.5,
         **kwargs,
     ) -> Dict:
-        assert volume == volume // 100 * 100
-        raise NotImplementedError
+        order_request = order.order_req
 
-    def sell(
-        self, security: str, price: float, volume: int, timeout: float = 0.5, **kwargs
-    ) -> Dict:
-        assert volume == volume // 100 * 100
-        raise NotImplementedError
+        volume = order_request.volume
+        if volume != volume // 100 * 100:
+            volume = volume // 100 * 100
+            logger.warning("买入数量必须是100的倍数, 已取整到%d", volume)
+
+        url = self._cmd_url("market_buy")
+
+        # 更新买入时间戳
+        order_request.created_at = datetime.datetime.now()
+        order_time = order_request.created_at.strftime("%Y-%m-%d %H:%M:%S")
+
+        order_request.order_side = OrderSide.BUY
+        order_request.bid_type = BidType.MARKET
+        data = {
+            "code": order_request.code,
+            "price": order_request.price,
+            "volume": order_request.volume,
+            "order_time": order_time,
+            "timeout": timeout,
+            **kwargs,
+        }
+
+        return post_json(url, payload=data, headers=self.headers)
+
+    def sell(self, order: TradeOrder, timeout: float = 0.5, **kwargs) -> Dict:
+        order_request = order.order_req
+
+        # 卖出数量可以是零头
+        volume = order_request.volume
+
+        url = self._cmd_url("sell")
+
+        # 更新时间戳
+        order_request.created_at = datetime.datetime.now()
+        order_time = order_request.created_at.strftime("%Y-%m-%d %H:%M:%S")
+
+        order_request.order_side = OrderSide.BUY
+        order_request.bid_type = BidType.LIMIT
+        data = {
+            "code": order_request.code,
+            "price": order_request.price,
+            "volume": volume,
+            "order_time": order_time,
+            "timeout": timeout,
+            **kwargs,
+        }
+
+        return post_json(url, payload=data, headers=self.headers)
 
     def market_sell(
         self,
-        security: str,
-        volume: int,
-        ttype=None,
-        limit_price: float = None,
+        order: TradeOrder,
         timeout: float = 0.5,
         **kwargs,
     ) -> Dict:
-        assert volume == volume // 100 * 100
-        raise NotImplementedError
+        order_request = order.order_req
+
+        # 卖出数量可以是零头
+        volume = order_request.volume
+
+        url = self._cmd_url("market_sell")
+
+        # 更新时间戳
+        order_request.created_at = datetime.datetime.now()
+        order_time = order_request.created_at.strftime("%Y-%m-%d %H:%M:%S")
+
+        order_request.order_side = OrderSide.SELL
+        order_request.bid_type = BidType.MARKET
+        data = {
+            "code": order_request.code,
+            "price": order_request.price,
+            "volume": volume,
+            "order_time": order_time,
+            "timeout": timeout,
+            **kwargs,
+        }
+
+        return post_json(url, payload=data, headers=self.headers)
 
     def sell_percent(
         self, security: str, price: float, percent: float, time_out: int = 0.5
@@ -192,14 +321,4 @@ class TradeClient:
 
 
 if __name__ == "__main__":
-    from traderclient.utils import enable_logging
-
-    enable_logging("info")
-    url = "http://192.168.100.19:9000/backtest/api/trade/v0.1"
-    acct = "仿真_张三_策略1"
-    token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
-    client = TradeClient(url, acct, token)
-
-    date = datetime.datetime(2022, 3, 1, 9, 35)
-    rsp = client.buy(stock_name("002537"), 9.8, 100, order_time=date.isoformat())
-    print(rsp)
+    pass

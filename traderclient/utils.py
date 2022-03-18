@@ -19,17 +19,3 @@ def enable_logging(level: str = "info"):
     }.get(level.lower(), logging.INFO)
 
     logger.setLevel(level)
-
-
-def stock_name(code: str):
-    # code: 002537
-    # return "002537.XSHE
-
-    if len(code) != 6:
-        return "000000.XXXX"
-    if code[0] == "0":
-        return f"{code}.XSHE"
-    if code[0] == "6":
-        return f"{code}.XSHG"
-
-    return "000000.XXXX"
