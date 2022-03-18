@@ -173,16 +173,67 @@ class TradeClient:
         return shares
 
     def today_entrusts(self) -> List:
-        raise NotImplementedError
+        url = self._cmd_url("today_entrusts")
+
+        result = get(url, headers=self.headers)
+        if result is None:
+            logger.error("cannot get today entrusts")
+            return None
+
+        status = result["status"]
+        if status != 0:
+            logger.error("failed to get today entrusts")
+            return None
+
+        entrusts = result["data"]
+        return entrusts
 
     def today_trades(self) -> List:
-        raise NotImplementedError
+        url = self._cmd_url("today_trades")
+
+        result = get(url, headers=self.headers)
+        if result is None:
+            logger.error("cannot get today trades")
+            return None
+
+        status = result["status"]
+        if status != 0:
+            logger.error("failed to get today trades")
+            return None
+
+        trades = result["data"]
+        return trades
 
     def cancel_entrust(self, entrust_id: int) -> Dict:
-        raise NotImplementedError
+        url = self._cmd_url("cancel_entrust")
+
+        data = {"request_id": entrust_id}
+        result = post_json(url, payload=data, headers=self.headers)
+        if result is None:
+            logger.error("cannot cancel entrust")
+            return None
+
+        status = result["status"]
+        if status != 0:
+            logger.error("failed to cancel entrust")
+            return None
+
+        return result
 
     def cancel_all_entrusts(self) -> Dict:
-        raise NotImplementedError
+        url = self._cmd_url("cancel_all_entrust")
+
+        result = get(url, headers=self.headers)
+        if result is None:
+            logger.error("cannot cancel all entrust")
+            return None
+
+        status = result["status"]
+        if status != 0:
+            logger.error("failed to cancel all entrust")
+            return None
+
+        return result
 
     def buy(self, order: TradeOrder, **kwargs) -> Dict:
         """买入股票

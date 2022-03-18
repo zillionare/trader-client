@@ -20,7 +20,7 @@ def get_cmd(url):
         "buy": "买入股票",
         "sell": "卖出股票",
         "available_shares": "获取可用持仓",
-        "today_entrust": "获取当日委托",
+        "today_entrusts": "获取当日委托",
         "today_trades": "获取当日成交",
         "cancel_entrust": "撤单",
         "cancel_all_entrust": "全部撤单",

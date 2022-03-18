@@ -47,31 +47,53 @@ if __name__ == "__main__":
     # initialize client instance
     client = TradeClient(url, acct, token)
 
+    print("\n------------- info --------------")
     rsp = client.info()
     print(rsp)
 
+    print("\n------------- balance --------------")
     rsp = client.balance()
     print(rsp)
 
+    print("\n------------- available_money --------------")
     rsp = client.available_money()
     print(rsp["available"])
 
+    print("\n------------- positions --------------")
     rsp = client.positions()
     for position in rsp:
         print(position)
 
+    print("\n------------- available_shares --------------")
     rsp = client.available_shares("600000")
     print(rsp["sellable"])
 
-    """
+    print("\n------------- today_entrusts --------------")
+    rsp = client.today_entrusts()
+    for entrust in rsp:
+        print(entrust)
+
+    print("\n------------- today_trades --------------")
+    rsp = client.today_trades()
+    for trade in rsp:
+        print(trade)
+
+    print("\n------------- cancel_entrust --------------")
+    rsp = client.cancel_entrust("xxx-xxx-xxx-xxxxxxx")
+    print(rsp)
+
+    print("\n------------- cancel_all_entrust --------------")
+    rsp = client.cancel_all_entrusts()
+    print(rsp)
+
     # test buy
+    print("\n------------- buy --------------")
     order = TradeOrder("002537", 200, 9.9)
     rsp = client.buy(order)
     print(rsp)
 
-    # test buy
+    print("\n------------- market_buy --------------")
     order = TradeOrder("002537", 200, 9.9)
     order.set_limit_price(10.11)
     rsp = client.market_buy(order)
     print(rsp)
-    """
