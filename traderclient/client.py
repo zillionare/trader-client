@@ -286,14 +286,12 @@ class TradeClient:
 
         # 更新操作时间戳
         order_request.created_at = datetime.datetime.now()
-        order_time = order_request.created_at.strftime("%Y-%m-%d %H:%M:%S")
 
         # 设置payload
         data = {
             "code": order_request.code,
             "price": order_request.price,
             "volume": order_request.volume,
-            "order_time": order_time,
             "timeout": timeout,
             **kwargs,
         }
@@ -328,7 +326,7 @@ class TradeClient:
         order_request.order_side = OrderSide.BUY
         order_request.bid_type = BidType.LIMIT
 
-        return self.trade_operation(url, timeout)
+        return self.trade_operation(url, timeout, **kwargs)
 
     def market_buy(self, timeout: float = 0.5, **kwargs) -> Dict:
         """市价买入股票，同花顺终端需要改为涨跌停限价，掘金客户端支持市价交易，掘金系统默认五档成交剩撤
@@ -346,7 +344,7 @@ class TradeClient:
         order_request.order_side = OrderSide.BUY
         order_request.bid_type = BidType.MARKET
 
-        return self.trade_operation(url, timeout)
+        return self.trade_operation(url, timeout, **kwargs)
 
     def sell(self, timeout: float = 0.5, **kwargs) -> Dict:
         """以限价方式卖出股票
@@ -362,7 +360,7 @@ class TradeClient:
         order_request.order_side = OrderSide.BUY
         order_request.bid_type = BidType.LIMIT
 
-        return self.trade_operation(url, timeout)
+        return self.trade_operation(url, timeout, **kwargs)
 
     def market_sell(self, timeout: float = 0.5, **kwargs) -> Dict:
         """市价卖出股票，同花顺终端需要改为涨跌停限价，掘金客户端支持市价交易，掘金系统默认五档成交剩撤
@@ -378,7 +376,7 @@ class TradeClient:
         order_request.order_side = OrderSide.SELL
         order_request.bid_type = BidType.MARKET
 
-        return self.trade_operation(url, timeout)
+        return self.trade_operation(url, timeout, **kwargs)
 
     def sell_percent(
         self, security: str, price: float, percent: float, time_out: int = 0.5

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Author   : henry
 # @Time     : 2022-03-09 15:08
+import datetime
 import logging
 
 from traderclient import TradeClient
@@ -17,9 +18,7 @@ def init_logging(level=logging.INFO):
     logger.setLevel(level)
 
 
-if __name__ == "__main__":
-    init_logging(logging.DEBUG)
-
+def test_functions():
     url = "http://192.168.100.19:9000/backtest/api/trade/v0.1"
     acct = "仿真_张三_策略1"
     token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
@@ -66,16 +65,33 @@ if __name__ == "__main__":
     rsp = client.cancel_all_entrusts()
     print(rsp)
 
+
+def test_trade_functions():
+    url = "http://192.168.100.19:9000/backtest/api/trade/v0.1"
+    acct = "仿真_张三_策略1"
+    token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
+
+    # initialize client instance
+    client = TradeClient(url, acct, token)
+
     # test buy
     print("\n------------- buy --------------")
-    order = client.set_trade_entrust("002537.XSHE", 200, 9.9)
+    client.set_trade_entrust("002537.XSHE", 200, 9.9)
     rsp = client.buy()
+    print(rsp)
+    print(client.order.toDict())
+
+    print("\n------------- backtest buy --------------")
+    # for backtest, add trade time
+    order = client.set_trade_entrust("002537.XSHE", 200, 9.9)
+    # set trade time
+    trade_date = datetime.datetime(2022, 3, 1, 9, 35)
+    # pass trade time as an optional parameter
+    rsp = client.buy(order_time=trade_date.isoformat())
+    print(rsp)
     print(order.toDict())
 
-    print(order.order_req.code)
-
     """
-
     print("\n------------- market_buy --------------")
     order = client.set_trade_entrust("002537.XSHE", 200, 9.9)
     order.set_limit_price(10.11)
@@ -94,3 +110,10 @@ if __name__ == "__main__":
     print(rsp)
 
     """
+
+
+if __name__ == "__main__":
+    init_logging(logging.DEBUG)
+
+    # test_functions()
+    test_trade_functions()
