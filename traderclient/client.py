@@ -7,11 +7,11 @@ from typing import Dict, List
 import arrow
 
 from traderclient.trade import (
-    BidType,
     OrderRequest,
     OrderResponse,
     OrderSide,
     OrderStatus,
+    OrderType,
     TradeOrder,
 )
 from traderclient.transport import get, post_json
@@ -32,29 +32,10 @@ class TradeClient:
         self.token = token
         self.account = acct
         self.headers = {"Authorization": f"Token {self.token}"}
-        self.order = None
+        self.entrusts = []  # 此处命名沿用API接口，不用Order，只保存接口返回的结果
 
     def _cmd_url(self, cmd: str) -> str:
         return f"{self._url}/{cmd}"
-
-    def set_trade_entrust(self, code: str, volume: int, price: float = 0):
-        """构建新的委托信息，之前的委托对象会扔弃（重新初始化）
-
-        Args:
-            code (str): 股票代码
-            volume (int): 委托量
-            price (float, optional): 委托价格，市价委托时一般为0
-
-        Returns:
-            TradeOrder: 返回新建的委托对象
-        """
-        self.order = TradeOrder(code, volume, price)
-        return self.order
-
-    def get_trade_order(self):
-        # 通常情况下无需使用此方法返回委托对象
-
-        return self.order
 
     def handle_failure_response(self, result: Dict):
         """处理状态不为0的响应信息，暂时只记入日志
@@ -73,323 +54,393 @@ class TradeClient:
 
         return None
 
-    def update_trade_info(self, data: Dict):
-        """从上游服务返回数据中加载委托的执行信息
-
-        Args:
-            data (Dict): {'status':0, 'msg':'OK', 'data': data}中的data
-        """
-
-        order_response = self.order.order_rsp
-
-        # 委托号，委托状态（2部分成交，3全部成交）
-        order_response.entrust_id = data["cid"]
-        order_response.order_status = data["status"]
-
-        # 成交均价，成交量，成交额，手续费（包含佣金、印花税、杂费）
-        order_response.avg_price = data["price"]
-        order_response.filled_vol = data["volume"]
-        order_response.filled_amount = data["value"]
-        order_response.commission = data["trade_fees"]
-
-        # 带毫秒的时间信息
-        order_response.updated_at = datetime.datetime.strptime(
-            data["date"], "%Y-%m-%d %H:%M:%S.%f"
-        )
-
     def info(self) -> Dict:
-        """获取账户信息"""
-        url = self._cmd_url("info")
-        result = get(url, headers=self.headers)
-
-        if result is None:
-            logger.error("cannot get account information")
-            return None
-
-        status = result["status"]
-        if status != 0:
-            logger.error("failed to get account information")
-            return None
-
-        info = result["data"]
-        start = info.get("start", None)
-        if start is not None:
-            start = arrow.get(start).date()
-
-        end = info.get("last_trade", None)
-        if end is not None:
-            end = arrow.get(end).date()
-
-        return {
-            "name": info["name"],
-            "assets": info["assets"],
-            "capital": info["capital"],
-            "start": start,
-            "last_trade": end,
-            "trades": info["trades"],
-        }
-
-    def balance(self) -> Dict:
-        """获取账户余额信息
+        """获取账户信息
 
         Returns:
-            _description_
+            主要字段：账号名，当前资产，本金，最后一笔交易时间，交易笔数，账户创建时间
+        """
+        url = self._cmd_url("info")
+        result = get(url, headers=self.headers)
+        if result is None:
+            logger.error("info: failed to get information")
+            return None
+
+        return result
+
+    def balance(self) -> Dict:
+        """取该子账号对应的账户余额信息
+
+        Returns:
+            主要字段：参考盈亏，可用资金，股票市值，总资产，盈亏比例，子账户ID
         """
         url = self._cmd_url("balance")
         result = get(url, headers=self.headers)
-
         if result is None:
-            logger.error("cannot get balance information")
+            logger.error("balance: failed to get information")
             return None
 
-        status = result["status"]
-        if status != 0:
-            logger.error("failed to get balance information")
-            return None
-
-        info = result["data"]
-        return info
+        return result
 
     def available_money(self) -> float:
-        """返回当前可用资金
+        """取当前之账户可用金额。策略函数可能需要这个数据进行仓位计算
 
         Returns:
-            _description_
+            float: 账户可用资金
         """
         url = self._cmd_url("available_money")
         result = get(url, headers=self.headers)
-
         if result is None:
-            logger.error("cannot get available money")
+            logger.error("available_money: failed to get information")
             return None
 
-        status = result["status"]
-        if status != 0:
-            logger.error("failed to get available money")
-            return None
-
-        info = result["data"]
-        return info
+        return result
 
     def positions(self) -> List:
-        """返回当前持仓
+        """取该子账户当前持仓信息
 
         Returns:
-            _description_
+            List: 单个股票的信息为，代码，名称，总股数，可卖数，成本均价
         """
         url = self._cmd_url("positions")
         result = get(url, headers=self.headers)
-
         if result is None:
-            logger.error("cannot get available money")
+            logger.error("positions: failed to get information")
             return None
 
-        status = result["status"]
-        if status != 0:
-            logger.error("failed to get available money")
-            return None
+        return result
 
-        positions = result["data"]
-        return positions
-
-    def available_shares(self, code: str = None) -> List:
+    def available_shares(self, security: str) -> int:
         """返回某支股票当前可用数量
 
         Args:
-            code : 股票代码，如果为None，则返回所有股票的可用数量
+            security : 股票代码
 
         Returns:
-            _description_
+            int: 指定股票今日可卖数量，无可卖即为0
         """
         url = self._cmd_url("available_shares")
-        data = {"code": code}
+        data = {"security": security}
 
         result = post_json(url, payload=data, headers=self.headers)
         if result is None:
-            logger.error("cannot get available shares")
+            logger.error("positions: failed to get information")
             return None
 
-        status = result["status"]
-        if status != 0:
-            logger.error("failed to get available shares")
-            return None
-
-        shares = result["data"]
-        return shares
+        return result
 
     def today_entrusts(self) -> List:
+        """查询账户当日所有委托，包括失败的委托
+
+        Returns:
+            List: 委托信息数组，字段参考buy
+        """
         url = self._cmd_url("today_entrusts")
 
         result = get(url, headers=self.headers)
         if result is None:
-            logger.error("cannot get today entrusts")
+            logger.error("today_entrusts: failed to get information")
             return None
 
-        status = result["status"]
-        if status != 0:
-            logger.error("failed to get today entrusts")
-            return None
-
-        entrusts = result["data"]
-        return entrusts
+        return result
 
     def today_trades(self) -> List:
+        """查询当日所有成交的委托
+
+        Returns:
+            List: 委托信息，参考buy的结果
+        """
         url = self._cmd_url("today_trades")
 
         result = get(url, headers=self.headers)
         if result is None:
-            logger.error("cannot get today trades")
+            logger.error("today_trades: failed to get information")
             return None
 
-        status = result["status"]
-        if status != 0:
-            logger.error("failed to get today trades")
-            return None
+        return result
 
-        trades = result["data"]
-        return trades
+    def cancel_entrust(self, cid: str) -> Dict:
+        """撤销委托
 
-    def cancel_entrust(self, entrust_id: int) -> Dict:
+        Args:
+            cid (str): 交易服务器返回的委托合同号
+
+        Returns:
+            Dict: _description_
+        """
         url = self._cmd_url("cancel_entrust")
 
-        data = {"request_id": entrust_id}
+        data = {"cid": cid}
         result = post_json(url, payload=data, headers=self.headers)
         if result is None:
-            logger.error("cannot cancel entrust")
-            return None
-
-        status = result["status"]
-        if status != 0:
-            logger.error("failed to cancel entrust")
+            logger.error("cancel_entrust: failed to get information")
             return None
 
         return result
 
     def cancel_all_entrusts(self) -> Dict:
+        """撤销当前所有未完成的委托，包括部分成交，不同交易系统实现不同
+
+        Returns:
+            Dict: 被撤的委托单信息，同buy
+        """
         url = self._cmd_url("cancel_all_entrust")
 
         result = get(url, headers=self.headers)
         if result is None:
-            logger.error("cannot cancel all entrust")
-            return None
-
-        status = result["status"]
-        if status != 0:
-            logger.error("failed to cancel all entrust")
+            logger.error("cancel_all_entrust: failed to get information")
             return None
 
         return result
 
-    def trade_operation(self, url: str, timeout: float, **kwargs):
-        order_request = self.order.order_req
-        self.headers.update({"Request-ID": order_request.request_id})
-
-        # 更新操作时间戳
-        order_request.created_at = datetime.datetime.now()
-
-        # 设置payload
-        data = {
-            "code": order_request.code,
-            "price": order_request.price,
-            "volume": order_request.volume,
-            "timeout": timeout,
-            **kwargs,
-        }
-
-        result = post_json(url, payload=data, headers=self.headers)
-        if result is None:
-            return None
-
-        status = result["status"]
-        if status != 0:
-            return self.handle_failure_response()
-
-        data = result["data"]
-        # 更新委托信息
-        self.update_trade_info(data)
-
-        return result
-
-    def buy(self, timeout: float = 0.5, **kwargs) -> Dict:
-        """买入股票
+    def buy(
+        self, security: str, price: float, volume: int, timeout: float = 0.5, **kwargs
+    ) -> Dict:
+        """证券买入
 
         Args:
-            timeout : 等待交易接口返回的超时设定，默认0.5秒
+            security (str): 证券代码
+            price (float): 买入价格（限价）
+            volume (int): 买入股票数
+            timeout (float, optional): 默认等待交易反馈的超时为0.5秒
+
+        Returns:
+            Dict: _description_
         """
-        order_request = self.order.order_req
-        volume = order_request.volume
         if volume != volume // 100 * 100:
             volume = volume // 100 * 100
             logger.warning("买入数量必须是100的倍数, 已取整到%d", volume)
 
         url = self._cmd_url("buy")
-        order_request.order_side = OrderSide.BUY
-        order_request.bid_type = BidType.LIMIT
+        parameters = {
+            "security": security,
+            "price": price,
+            "volume": volume,
+            "timeout": timeout,
+            **kwargs,
+        }
 
-        return self.trade_operation(url, timeout, **kwargs)
+        result = post_json(url, params=parameters, headers=self.headers)
+        if result is None:
+            logger.error("buy: failed to get information")
+            return None
 
-    def market_buy(self, timeout: float = 0.5, **kwargs) -> Dict:
+        return result
+
+    def market_buy(
+        self,
+        security: str,
+        volume: int,
+        ttype: OrderType = OrderType.MARKET,
+        limit_price: float = None,
+        timeout: float = 0.5,
+        **kwargs,
+    ) -> Dict:
         """市价买入股票，同花顺终端需要改为涨跌停限价，掘金客户端支持市价交易，掘金系统默认五档成交剩撤
 
         Args:
-            timeout : 等待交易接口返回的超时设定，默认0.5秒
+            security (str): 证券代码
+            volume (int): 买入数量
+            ttype (OrderType, optional): 市价买入类型，缺省为五档成交剩撤.
+            limit_price (float, optional): 剩余转限价的模式下，设置的限价
+            timeout (float, optional): 默认等待交易反馈的超时为0.5秒
+
+        Returns:
+            Dict: _description_
         """
-        order_request = self.order.order_req
-        volume = order_request.volume
+
         if volume != volume // 100 * 100:
             volume = volume // 100 * 100
             logger.warning("买入数量必须是100的倍数, 已取整到%d", volume)
 
         url = self._cmd_url("market_buy")
-        order_request.order_side = OrderSide.BUY
-        order_request.bid_type = BidType.MARKET
+        parameters = {
+            "security": security,
+            "price": 0,
+            "volume": volume,
+            "order_type": ttype,
+            "timeout": timeout,
+            **kwargs,
+        }
+        if limit_price is not None:
+            parameters["limit_price"] = limit_price
 
-        return self.trade_operation(url, timeout, **kwargs)
+        result = post_json(url, params=parameters, headers=self.headers)
+        if result is None:
+            logger.error("market_buy: failed to get information")
+            return None
 
-    def sell(self, timeout: float = 0.5, **kwargs) -> Dict:
+        return result
+
+    def sell(
+        self, security: str, price: float, volume: int, timeout: float = 0.5, **kwargs
+    ) -> Dict:
         """以限价方式卖出股票
 
         Args:
-            timeout : 等待交易接口返回的超时设定，默认0.5秒
+            security (str): 证券代码
+            price (float): 买入价格（限价）
+            volume (int): 买入股票数
+            timeout (float, optional): 默认等待交易反馈的超时为0.5秒
         """
-        order_request = self.order.order_req
-
-        # 卖出数量可以是零头
-
         url = self._cmd_url("sell")
-        order_request.order_side = OrderSide.BUY
-        order_request.bid_type = BidType.LIMIT
+        parameters = {
+            "security": security,
+            "price": price,
+            "volume": volume,
+            "timeout": timeout,
+            **kwargs,
+        }
 
-        return self.trade_operation(url, timeout, **kwargs)
+        result = post_json(url, params=parameters, headers=self.headers)
+        if result is None:
+            logger.error("sell: failed to get information")
+            return None
 
-    def market_sell(self, timeout: float = 0.5, **kwargs) -> Dict:
+        return result
+
+    def market_sell(
+        self,
+        security: str,
+        volume: int,
+        ttype: OrderType = OrderType.MARKET,
+        limit_price: float = None,
+        timeout: float = 0.5,
+        **kwargs,
+    ) -> Dict:
         """市价卖出股票，同花顺终端需要改为涨跌停限价，掘金客户端支持市价交易，掘金系统默认五档成交剩撤
 
         Args:
-            timeout : 等待交易接口返回的超时设定，默认0.5秒
+            security (str): 证券代码
+            volume (int): 卖出数量
+            ttype (OrderType, optional): 市价卖出类型，缺省为五档成交剩撤.
+            limit_price (float, optional): 剩余转限价的模式下，设置的限价
+            timeout (float, optional): 默认等待交易反馈的超时为0.5秒
         """
-        order_request = self.order.order_req
-
-        # 卖出数量可以是零头
-
         url = self._cmd_url("market_sell")
-        order_request.order_side = OrderSide.SELL
-        order_request.bid_type = BidType.MARKET
+        parameters = {
+            "security": security,
+            "price": 0,
+            "volume": volume,
+            "order_type": ttype,
+            "timeout": timeout,
+            **kwargs,
+        }
+        if limit_price is not None:
+            parameters["limit_price"] = limit_price
 
-        return self.trade_operation(url, timeout, **kwargs)
+        result = post_json(url, params=parameters, headers=self.headers)
+        if result is None:
+            logger.error("market_sell: failed to get information")
+            return None
+
+        return result
 
     def sell_percent(
-        self, security: str, price: float, percent: float, time_out: int = 0.5
+        self, security: str, price: float, percent: float, timeout: int = 0.5
     ) -> Dict:
-        assert percent > 0 and percent <= 1
-        raise NotImplementedError
+        """按资产比例卖出特定的股票（基于可买股票数），比例的数字由调用者提供
 
-    def sell_all(self, percent: float, timeout: float = 0.5) -> Dict:
-        assert percent > 0 and percent <= 1
-        raise NotImplementedError
+        Args:
+            security (str): 特定的股票代码
+            price (float): 市价卖出，价格参数可为0
+            percent (float): 调用者给出的百分比，(0, 1]
+            time_out (int, optional): 缺省超时为0.5秒
+
+        Returns:
+            Dict: 股票卖出委托单的详细信息，于sell指令相同
+        """
+        if percent <= 0 or percent > 1:
+            return None
+        if len(security) < 6:
+            return None
+
+        url = self._cmd_url("sell_percent")
+        parameters = {
+            "security": security,
+            "price": price,
+            "timeout": timeout,
+        }
+
+        result = post_json(url, params=parameters, headers=self.headers)
+        if result is None:
+            logger.error("sell_percent: failed to get information")
+            return None
+
+        return result
+
+    def sell_all(self, percent: float, timeout: float = 0.5) -> List:
+        """将所有持仓按percent比例进行减仓，用于特殊情况下的快速减仓（基于可买股票数）
+
+        Args:
+            percent (float): 调用者给出的百分比，(0, 1]
+            time_out (int, optional): 缺省超时为0.5秒
+
+        Returns:
+            List: 所有卖出股票的委托单信息，于sell指令相同
+        """
+        if percent <= 0 or percent > 1:
+            return None
+
+        url = self._cmd_url("sell_all")
+        parameters = {
+            "percent": percent,
+            "timeout": timeout,
+        }
+
+        result = post_json(url, params=parameters, headers=self.headers)
+        if result is None:
+            logger.error("sell_all: failed to get information")
+            return None
+
+        return result
 
     def get_trades_in_range(self, start: datetime.date, end: datetime.date) -> List:
-        raise NotImplementedError
+        if start is None and end is not None:
+            logger.error("get_trades_in_range, start or end cannot be None")
+            return None
+        if start is not None and end is None:
+            logger.error("get_trades_in_range, start or end cannot be None")
+            return None
+        if start > end:
+            logger.error("get_trades_in_range, end is early than start!")
+            return None
+
+        url = self._cmd_url("get_trades_in_range")
+        parameters = {}
+        if start is not None:
+            parameters["start"] = start.strftime("%Y-%m-%d %H:%M:%S")
+        if end is not None:
+            parameters["end"] = end.strftime("%Y-%m-%d %H:%M:%S")
+
+        result = post_json(url, params=parameters, headers=self.headers)
+        if result is None:
+            logger.error("get_trades_in_range: failed to get information")
+            return None
+
+        return result
 
     def get_entrusts_in_range(self, start: datetime.date, end: datetime.date) -> List:
-        raise NotImplementedError
+        if start is None and end is not None:
+            logger.error("get_entrusts_in_range, start or end cannot be None")
+            return None
+        if start is not None and end is None:
+            logger.error("get_entrusts_in_range, start or end cannot be None")
+            return None
+        if start > end:
+            logger.error("get_entrusts_in_range, end is early than start!")
+            return None
+
+        url = self._cmd_url("get_entrusts_in_range")
+        parameters = {}
+        if start is not None:
+            parameters["start"] = start.strftime("%Y-%m-%d %H:%M:%S")
+        if end is not None:
+            parameters["end"] = end.strftime("%Y-%m-%d %H:%M:%S")
+
+        result = post_json(url, params=parameters, headers=self.headers)
+        if result is None:
+            logger.error("get_entrusts_in_range: failed to get information")
+            return None
+
+        return result

@@ -4,6 +4,7 @@
 import datetime
 import uuid
 from enum import IntEnum
+from termios import VLNEXT
 
 
 class OrderSide(IntEnum):
@@ -11,7 +12,7 @@ class OrderSide(IntEnum):
     SELL = -1  # 股票卖出
 
 
-class BidType(IntEnum):
+class OrderType(IntEnum):
     LIMIT = 1  # 限价委托
     MARKET = 2  # 市价委托
 
@@ -26,21 +27,12 @@ class OrderStatus(IntEnum):
 
 class OrderRequest:
     request_id: str  # 交易请求号，客户端自行生成，每笔交易的唯一识别号
-    code: str  # 股票代码，输入时填数字即可，自动转换
+    security: str  # 股票代码，输入时填数字即可，自动转换
     price: float  # 交易价格，包括同花顺市价转换成的限价
     volume: int  # 交易数量，100的整数倍，除非成交的时候有零头
     order_side: OrderSide  # 交易方向，买卖
-    bid_type: BidType  # 限价，市价
+    order_type: OrderType  # 限价，市价
     created_at: datetime.datetime  # 交易发起时间
-
-    def __init__(self, code: str, price: float, volume: int):
-        self.request_id = uuid.uuid4().hex
-        self.code = code
-        self.price = price
-        self.volume = volume
-        self.order_side = OrderSide.BUY
-        self.bid_type = BidType.LIMIT
-        self.created_at = datetime.datetime.now()
 
 
 class OrderResponse:
@@ -68,8 +60,8 @@ class TradeOrder:
     order_req: OrderRequest  # 交易请求信息
     order_rsp: OrderResponse  # 委托信息
 
-    def __init__(self, code: str, volume: int, price: float = 0):
-        self.order_req = OrderRequest(code, price, volume)
+    def __init__(self):
+        self.order_req = OrderRequest()
         self.order_rsp = OrderResponse()
 
     def set_limit_price(self, limit_price: float):
@@ -78,7 +70,7 @@ class TradeOrder:
     def toDict(self):
         return {
             "request_id": self.order_req.request_id,
-            "code": self.order_req.code,
+            "security": self.order_req.security,
             "price": self.order_req.price,
             "volume": self.order_req.volume,
             "order_side": int(self.order_req.order_side),

@@ -6,11 +6,11 @@ __version__ = "0.1.0"
 
 from traderclient.client import TradeClient
 from traderclient.trade import (
-    BidType,
     OrderRequest,
     OrderResponse,
     OrderSide,
     OrderStatus,
+    OrderType,
     TradeOrder,
 )
 
@@ -18,7 +18,7 @@ __all__ = (
     TradeClient,
     OrderStatus,
     OrderSide,
-    BidType,
+    OrderType,
     TradeOrder,
     OrderRequest,
     OrderResponse,

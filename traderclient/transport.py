@@ -1,5 +1,6 @@
 import logging
 import uuid
+from typing import Dict
 
 import requests
 
@@ -8,7 +9,7 @@ from traderclient.utils import get_cmd, status_ok
 logger = logging.getLogger(__name__)
 
 
-def get_result(rsp, cmd: str = None):
+def process_response_result(rsp, cmd: str = None):
     """获取响应中的数据，并检查结果合法性
 
     Args:
@@ -24,7 +25,7 @@ def get_result(rsp, cmd: str = None):
     content_type = rsp.headers.get("Content-Type")
 
     try:
-        # process 200 response
+        # process 20x response, check response code first
         if status_ok(rsp.status_code):
             if content_type == "application/json":
                 json_data = rsp.json()
@@ -33,17 +34,14 @@ def get_result(rsp, cmd: str = None):
                     return json_data
                 else:
                     logger.error("invalid json response: %s, %s", cmd, json_data)
-                    return None
 
             # invalid response from trade server
             if content_type.startswith("text"):
                 logger.error("invalid text response, %s, %s", cmd, rsp.text)
-                return None
             else:
                 logger.error("invalid response, %s, %s", cmd, rsp.raw)
-                return None
 
-        # process errros
+        # process errros, response code as 40x, 50x
         else:
             if content_type == "application/json":
                 result = rsp.json()
@@ -53,7 +51,7 @@ def get_result(rsp, cmd: str = None):
                     rsp.status_code,
                     result,
                 )
-            else:
+            else:  # just save content to log file
                 logger.error(
                     "exec %s failed: response code: %d, extra msg: %s",
                     cmd,
@@ -72,41 +70,43 @@ def get(url, params=None, headers=None):
 
     Args:
         url : 目标URL，带服务器信息
-        payload : JSON格式的参数清单
+        params : JSON格式的参数清单
         headers : 额外的header选项
 
     Returns:
         根据需求文档，上游服务必须JSON，否则就是错误
     """
-    headers.update({"Request-ID": uuid.uuid4().hex})
+    if headers is None:
+        headers = {"Request-ID": uuid.uuid4().hex}
+    else:
+        headers.update({"Request-ID": uuid.uuid4().hex})
 
     rsp = requests.get(url, params=params, headers=headers)
-    result = get_result(rsp, get_cmd(url))
-
-    # save result into log file, for debug
-    if result is not None:
-        logger.debug("get response[GET] from server:\n%s", result)
+    action = get_cmd(url)
+    result = process_response_result(rsp, action)
 
     return result
 
 
-def post_json(url, payload=None, headers=None):
+def post_json(url, params=None, headers=None):
     """以POST发送JSON数据请求
 
     Args:
         url : 目标URL，带服务器信息
-        payload : JSON格式的参数清单
+        params : JSON格式的参数清单
         headers : 额外的header选项
 
     Returns:
         根据需求文档，上游服务必须JSON，否则就是错误
     """
+    if headers is None:
+        headers = {"Request-ID": uuid.uuid4().hex}
+    else:
+        headers.update({"Request-ID": uuid.uuid4().hex})
 
-    rsp = requests.post(url, json=payload, headers=headers)
-    result = get_result(rsp, get_cmd(url))
+    rsp = requests.post(url, json=params, headers=headers)
 
-    # save result into log file, for debug
-    if result is not None:
-        logger.debug("get response[POST] from server:\n%s", result)
+    action = get_cmd(url)
+    result = process_response_result(rsp, action)
 
     return result
