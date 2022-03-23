@@ -32,7 +32,6 @@ class TradeClient:
         self.token = token
         self.account = acct
         self.headers = {"Authorization": f"Token {self.token}"}
-        self.entrusts = []  # 此处命名沿用API接口，不用Order，只保存接口返回的结果
 
     def _cmd_url(self, cmd: str) -> str:
         return f"{self._url}/{cmd}"

@@ -46,62 +46,18 @@ def test_info():
 
     print("\n------------- balance --------------")
     result = client.balance()
-    if result is None:
-        return None
-
-    if result["status"] != 0:
-        logger.error("found errors in action: %d, %s", result["status"], result["msg"])
-        return None
-
-    if "data" not in result:
-        logger.error("no data found in response, please check your parameters")
-        return None
-
     print(result)
 
     print("\n------------- available_money --------------")
     result = client.available_money()
-    if result is None:
-        return None
-
-    if result["status"] != 0:
-        logger.error("found errors in action: %d, %s", result["status"], result["msg"])
-        return None
-
-    if "data" not in result:
-        logger.error("no data found in response, please check your parameters")
-        return None
-
     print(result)
 
     print("\n------------- positions --------------")
     result = client.positions()
-    if result is None:
-        return None
-
-    if result["status"] != 0:
-        logger.error("found errors in action: %d, %s", result["status"], result["msg"])
-        return None
-
-    if "data" not in result:
-        logger.error("no data found in response, please check your parameters")
-        return None
-
     print(result)
 
     print("\n------------- available_shares --------------")
     result = client.available_shares("600000")
-    if result is None:
-        return None
-
-    if result["status"] != 0:
-        logger.error("found errors in action: %d, %s", result["status"], result["msg"])
-        return None
-
-    if "data" not in result:
-        logger.error("no data found in response, please check your parameters")
-        return None
-
     print(result)
 
 
@@ -130,17 +86,6 @@ def test_entrusts():
 
     print("\n------------- today_trades --------------")
     result = client.today_trades()
-    if result is None:
-        return None
-
-    if result["status"] != 0:
-        logger.error("found errors in action: %d, %s", result["status"], result["msg"])
-        return None
-
-    if "data" not in result:
-        logger.error("no data found in response, please check your parameters")
-        return None
-
     print(result)
 
 
@@ -169,17 +114,6 @@ def test_functions():
 
     print("\n------------- cancel_all_entrust --------------")
     result = client.cancel_all_entrusts()
-    if result is None:
-        return None
-
-    if result["status"] != 0:
-        logger.error("found errors in action: %d, %s", result["status"], result["msg"])
-        return None
-
-    if "data" not in result:
-        logger.error("no data found in response, please check your parameters")
-        return None
-
     print(result)
 
 
@@ -193,8 +127,19 @@ def test_trade_functions():
 
     # test buy
     print("\n------------- buy --------------")
-    rsp = client.buy(security="002537.XSHE", price=9.9, volume=200)
-    print(rsp)
+    result = client.buy(security="002537.XSHE", price=9.9, volume=200)
+    if result is None:
+        return None
+
+    if result["status"] != 0:
+        logger.error("found errors in action: %d, %s", result["status"], result["msg"])
+        return None
+
+    if "data" not in result:
+        logger.error("no data found in response, please check your parameters")
+        return None
+
+    print(result)
 
     print("\n------------- backtest buy --------------")
     # for backtest, add trade time
