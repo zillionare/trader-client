@@ -20,7 +20,7 @@ def get_cmd(url: str):
         "today_entrusts": "获取当日委托",
         "today_trades": "获取当日成交",
         "cancel_entrust": "撤单",
-        "cancel_all_entrust": "全部撤单",
+        "cancel_all_entrusts": "全部撤单",
         "market_buy": "市价买入",
         "market_sell": "市价卖出",
         "sell_percent": "按比例卖出股票",

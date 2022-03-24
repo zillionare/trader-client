@@ -31,7 +31,8 @@ class TradeClient:
         self._url = url.rstrip("/")
         self.token = token
         self.account = acct
-        self.headers = {"Authorization": f"Token {self.token}"}
+        self.headers = {"Authorization": self.token}
+        self.headers["Account"] = self.account
 
     def _cmd_url(self, cmd: str) -> str:
         return f"{self._url}/{cmd}"
@@ -121,7 +122,7 @@ class TradeClient:
         url = self._cmd_url("available_shares")
         data = {"security": security}
 
-        result = post_json(url, payload=data, headers=self.headers)
+        result = post_json(url, params=data, headers=self.headers)
         if result is None:
             logger.error("positions: failed to get information")
             return None
@@ -136,7 +137,7 @@ class TradeClient:
         """
         url = self._cmd_url("today_entrusts")
 
-        result = get(url, headers=self.headers)
+        result = post_json(url, headers=self.headers)
         if result is None:
             logger.error("today_entrusts: failed to get information")
             return None
@@ -170,7 +171,7 @@ class TradeClient:
         url = self._cmd_url("cancel_entrust")
 
         data = {"cid": cid}
-        result = post_json(url, payload=data, headers=self.headers)
+        result = post_json(url, params=data, headers=self.headers)
         if result is None:
             logger.error("cancel_entrust: failed to get information")
             return None
@@ -183,9 +184,9 @@ class TradeClient:
         Returns:
             Dict: 被撤的委托单信息，同buy
         """
-        url = self._cmd_url("cancel_all_entrust")
+        url = self._cmd_url("cancel_all_entrusts")
 
-        result = get(url, headers=self.headers)
+        result = post_json(url, headers=self.headers)
         if result is None:
             logger.error("cancel_all_entrust: failed to get information")
             return None
