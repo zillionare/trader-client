@@ -63,8 +63,12 @@ def testcase_f01_01():
     result = client.positions()
     print_result(result)
 
-    input("next case: positions ......")
+    input("next case: balance ......")
     result = client.balance()
+    print_result(result)
+
+    input("next case: available_money ......")
+    result = client.available_money()
     print_result(result)
 
 
@@ -86,43 +90,29 @@ def testcase_f01_02():
     print_result(result)
 
 
-def testcase_f10_01():
+def testcase_f01_03():
     print("------------- info --------------")
     result = client.info()
     print_result(result)
 
-    input("next case: buy 003023.XSHE......")
-    result = client.buy(security="003023.XSHE", price=24.4, volume=600)
+    input("next case: buy 000020.XSHE......")
+    result = client.buy(security="000020.XSHE", price=99.94, volume=100)
     print_result(result)
 
-    input("next case: buy 000001.XSHE ......")
-    result = client.buy(security="000001.XSHE", price=4.2, volume=1200)
+    input("next case: buy 001030.XSHE......")
+    result = client.buy(security="001030.XSHE", price=9.94, volume=100)
     print_result(result)
 
-    input("next case: cancel_all_entrust ......")
-    result = client.cancel_all_entrusts()
+    input("next case: positions ......")
+    result = client.positions()
     print_result(result)
 
-    input("next case: today_entrusts ......")
-    result = client.today_entrusts()
+    input("next case: balance ......")
+    result = client.balance()
     print_result(result)
 
-
-def testcase_f10_02():
     print("------------- info --------------")
     result = client.info()
-    print_result(result)
-
-    input("next case: buy 003023.XSHE......")
-    result = client.buy(security="003023.XSHE", price=24.4, volume=600)
-    print_result(result)
-
-    input("next case: cancel_all_entrust ......13ae6632-d3ec-4a65-8876-1654df68eb17")
-    result = client.cancel_entrust(cid="13ae6632-d3ec-4a65-8876-1654df68eb17")
-    print_result(result)
-
-    input("next case: today_entrusts ......")
-    result = client.today_entrusts()
     print_result(result)
 
 
@@ -144,13 +134,31 @@ def testcase_f02_01():
     print_result(result)
 
 
+def testcase_f02_02():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: buy 600009.XSHG......")
+    result = client.buy(security="600009.XSHG", price=6.99, volume=2100)
+    print_result(result)
+
+    input("next case: today_entrusts ......")
+    result = client.today_entrusts()
+    print_result(result)
+
+    input("next case: today_entrusts ......")
+    result = client.today_entrusts()
+    print_result(result)
+
+
 def testcase_f02_03():
     print("------------- info --------------")
     result = client.info()
     print_result(result)
 
-    input("next case: buy 600000.XSHG......")
-    result = client.buy(security="600000.XSHG", price=6.99, volume=2100)
+    input("next case: buy 601118.XSHG......")
+    result = client.buy(security="601118.XSHG", price=6.99, volume=2100)
     print_result(result)
 
     input("next case: today_entrusts ......")
@@ -171,8 +179,8 @@ def testcase_f02_04():
     result = client.info()
     print_result(result)
 
-    input("next case: buy 600000.XSHG......")
-    result = client.buy(security="600000.XSHG", price=6.99, volume=14400)
+    input("next case: buy 600107.XSHG......")
+    result = client.buy(security="600107.XSHG", price=6.76, volume=1200)
     print_result(result)
 
     input("next case: today_entrusts ......")
@@ -180,8 +188,169 @@ def testcase_f02_04():
     print_result(result)
 
 
+def testcase_f02_20():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: buy 601600.XSHG......")
+    result = client.buy(security="601600.XSHG", price=6.99, volume=2100)
+    print_result(result)
+
+    input("next case: buy 003017.XSHE......")
+    result = client.buy(security="003017.XSHE", price=23.14, volume=800)
+    print_result(result)
+
+    input("next case: today_entrusts ......")
+    result = client.today_entrusts()
+    print_result(result)
+
+    input("next case: today_entrusts ......")
+    result = client.today_entrusts()
+    print_result(result)
+
+
+def testcase_f02_30():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: buy 003023.XSHE......")
+    result = client.buy(security="003023.XSHE", price=24.4, volume=600)
+    print_result(result)
+
+    input("next case: today_entrusts ......")
+    result = client.today_entrusts()
+    print_result(result)
+
+
+def testcase_f02_31():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: buy 600107.XSHG......")
+    result = client.buy(security="600107.XSHG", price=6.76, volume=15000)
+    print_result(result)
+
+    input("next case: today_entrusts ......")
+    result = client.today_entrusts()
+    print_result(result)
+
+
+def testcase_f02_32():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: buy 600107.XSHG......")
+    result = client.buy(security="600107.XSHG", price=6.76, volume=1200)
+    print_result(result)
+
+    input("next case: today_entrusts ......")
+    result = client.today_entrusts()
+    print_result(result)
+
+
+def testcase_f03_01():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: market_buy 600000.XSHG......")
+    result = client.market_buy(security="600000.XSHG", price=5.20, volume=10000)
+    print_result(result)
+
+
+def testcase_f06_01():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: buy 003023.XSHE......")
+    result = client.buy(security="003023.XSHE", price=24.4, volume=600)
+    print_result(result)
+
+    input("next case: cancel_entrust 5acd03f0-544c-4e17-8db4-a9a08bf69eb6 ......")
+    result = client.cancel_entrust("5acd03f0-544c-4e17-8db4-a9a08bf69eb6")
+    print_result(result)
+
+    input("next case: today_entrusts ......")
+    result = client.today_entrusts()
+    print_result(result)
+
+
+def testcase_f06_02():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: buy 003023.XSHE......")
+    result = client.buy(security="003023.XSHE", price=24.4, volume=600)
+    print_result(result)
+
+    input("next case: buy 000001.XSHE ......")
+    result = client.buy(security="000001.XSHE", price=4.2, volume=1200)
+    print_result(result)
+
+    input("next case: cancel_all_entrust ......")
+    result = client.cancel_all_entrusts()
+    print_result(result)
+
+    input("next case: today_entrusts ......")
+    result = client.today_entrusts()
+    print_result(result)
+
+
+def testcase_f06_03():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: buy 003023.XSHE......")
+    result = client.buy(security="003023.XSHE", price=24.4, volume=600)
+    print_result(result)
+
+    input("next case: cancel_entrust ba0a8ee8-a9c6-4c52-abb7-c5bdcbe20241 ......")
+    result = client.cancel_entrust("ba0a8ee8-a9c6-4c52-abb7-c5bdcbe20241")
+    print_result(result)
+
+    input("next case: today_entrusts ......")
+    result = client.today_entrusts()
+    print_result(result)
+
+
+def testcase_f07_02():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: buy 600107.XSHG......")
+    result = client.buy(security="600107.XSHG", price=6.76, volume=1200)
+    print_result(result)
+
+    input("next case: buy 600107.XSHG......")
+    result = client.buy(security="600107.XSHG", price=6.80, volume=500)
+    print_result(result)
+
+
+def testcase_f07_03():
+    print("------------- info --------------")
+    result = client.info()
+    print_result(result)
+
+    input("next case: sell 600107.XSHG......")
+    result = client.sell(security="600107.XSHG", price=6.76, volume=1200)
+    print_result(result)
+
+
 if __name__ == "__main__":
     init_logging(logging.DEBUG)
 
+    # testcase_f01_01()
     # testcase_f02_04()
-    testcase_f01_02()
+    # testcase_f06_03()
+    testcase_f03_01()
+
+    input("next step: query account info")
+    testcase_f01_01()

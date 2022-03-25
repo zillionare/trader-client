@@ -137,7 +137,7 @@ class TradeClient:
         """
         url = self._cmd_url("today_entrusts")
 
-        result = post_json(url, headers=self.headers)
+        result = get(url, headers=self.headers)
         if result is None:
             logger.error("today_entrusts: failed to get information")
             return None
