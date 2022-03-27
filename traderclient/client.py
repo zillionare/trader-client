@@ -6,14 +6,7 @@ from typing import Dict, List
 
 import arrow
 
-from traderclient.trade import (
-    OrderRequest,
-    OrderResponse,
-    OrderSide,
-    OrderStatus,
-    OrderType,
-    TradeOrder,
-)
+from traderclient.trade import OrderSide, OrderStatus, OrderType
 from traderclient.transport import get, post_json
 
 logger = logging.getLogger(__name__)
