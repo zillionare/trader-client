@@ -4,7 +4,7 @@
 import datetime
 import logging
 
-from traderclient import TradeClient
+from traderclient import OrderSide, OrderStatus, OrderType, TradeClient
 
 logger = logging.getLogger(__name__)
 

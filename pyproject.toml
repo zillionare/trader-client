@@ -44,6 +44,7 @@ toml = {version = "^0.10.2", optional = true}
 requests = "^2.27.1"
 arrow = "0.15.8"
 enum34 = "^1.1.10"
+livereload = "^2.6.3"
 
 [tool.poetry.extras]
 test = [
