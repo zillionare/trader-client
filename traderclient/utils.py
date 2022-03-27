@@ -1,15 +1,37 @@
 # -*- coding: utf-8 -*-
 # @Author   : henry
 # @Time     : 2022-03-09 15:08
+import logging
 
 
 def status_ok(code: int):
     return code in [200, 201, 204]
 
 
+def enable_logging(level: str = "info"):
+    logger = logging.getLogger()
+
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("%(message)s")
+    handler.setFormatter(formatter)
+
+    logger.addHandler(handler)
+
+    level = {
+        "debug": logging.DEBUG,
+        "info": logging.INFO,
+        "warning": logging.WARNING,
+        "error": logging.ERROR,
+        "critical": logging.CRITICAL,
+    }.get(level.lower(), logging.INFO)
+
+    logger.setLevel(level)
+
+
 def get_cmd(url: str):
     cmd = url.split("/")[-1]
     return {
+        "accounts": "创建/查询账户",
         "info": "获取账户信息",
         "balance": "获取账户余额",
         "available_money": "获取可用资金",

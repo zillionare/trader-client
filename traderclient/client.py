@@ -6,6 +6,7 @@ from typing import Dict, List
 
 import arrow
 
+from traderclient.errors import CreateAccountError
 from traderclient.trade import (
     OrderRequest,
     OrderResponse,
@@ -20,19 +21,42 @@ logger = logging.getLogger(__name__)
 
 
 class TradeClient:
-    def __init__(self, url: str, acct: str, token: str):
+    def __init__(
+        self, url: str, acct: str, token: str, is_backtest: bool = False, **kwargs
+    ):
         """构建一个交易客户端
+
+        当`is_backtest`为True时，会自动在服务端创建新账户。此时kwargs必须传入capital和commission。
+
+        Info:
+            如果`url`指向了回测服务器，但`is_backtest`设置为False，如果提供的账户acct,token在服务器端存在，则将重用该账户，该账户之前的一些数据仍将保留，这可能导致某些错误，特别是继续进行测试时，时间发生rewind的情况。
 
         Args:
             url : 服务器地址及路径，比如 http://localhost:port/trade/api/v1
             acct : 子账号
             token : 子账号对应的服务器访问令牌
+            is_backtest : 是否为回测模式，默认为False。
+
+        Keyword Args:
+            capital : 初始资金，默认为1_000_000
+            commission : 手续费率，默认为1.5e-4
+
+        Raises:
+            CreateAccountError 如果创建账户失败，则会抛出些异常。
         """
         self._url = url.rstrip("/")
         self.token = token
         self.account = acct
         self.headers = {"Authorization": self.token}
         self.headers["Account"] = self.account
+
+        self._is_backtest = is_backtest
+
+        if is_backtest:
+            capital = kwargs.get("capital", 1_000_000)
+            commission = kwargs.get("commission", 1.5e-4)
+
+            self._create_account(acct, token, capital, commission)
 
     def _cmd_url(self, cmd: str) -> str:
         return f"{self._url}/{cmd}"
@@ -53,6 +77,27 @@ class TradeClient:
             )
 
         return None
+
+    def _create_account(self, acct: str, token: str, capital: float, commission: float):
+        """在回测模式下，创建一个新账户
+
+        Args:
+            acct : 子账号名
+            token : 子账号对应的服务器访问令牌
+            capital : 初始资金
+            commission : 手续费率
+        """
+        url = self._cmd_url("accounts")
+        data = {
+            "name": acct,
+            "token": token,
+            "capital": capital,
+            "commission": commission,
+        }
+
+        result = post_json(url, data, headers=self.headers)
+        if result is None:
+            raise CreateAccountError("failed to create account")
 
     def info(self) -> Dict:
         """获取账户信息
