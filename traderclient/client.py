@@ -480,3 +480,21 @@ class TradeClient:
             return None
 
         return result
+
+    def metrics(self, start: datetime.date = None, end: datetime.date = None) -> Dict:
+        """获取指定时间段的账户指标评估数据
+
+        Args:
+            start : _description_.
+            end : _description_.
+
+        Returns:
+            _description_
+        """
+        url = self._cmd_url("metrics")
+        result = get(url, headers=self.headers)
+        if result is None:
+            logger.error("info: failed to get information")
+            return None
+
+        return result["data"]

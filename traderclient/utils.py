@@ -49,4 +49,5 @@ def get_cmd(url: str):
         "sell_all": "全部卖出",
         "get_trades_in_range": "获取指定时间段的成交记录",
         "get_entrusts_in_range": "获取指定时间段的委托记录",
+        "metrics": "账户评估指标",
     }.get(cmd, "未知命令")

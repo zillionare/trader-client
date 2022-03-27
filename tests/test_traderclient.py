@@ -16,6 +16,7 @@ token = "trader-client-test:15f53d68858e4f0cb683a5d64ab2723b"
 class TraderClientTest(unittest.TestCase):
     def setUp(self):
         enable_logging("info")
+        # url = "http://192.168.100.114:7080/backtest/api/trade/v0.2"
         url = "http://localhost:3180/backtest/api/trade/v0.2"
         name = "backtest"
 
@@ -96,4 +97,29 @@ class TraderClientTest(unittest.TestCase):
                 "time",
                 "trade_fees",
             }.issubset(data)
+        )
+
+    def test_metrics(self):
+        date = datetime.datetime(2022, 3, 1, 9, 35)
+        self.client.buy("002537.XSHE", 9.8, 100, order_time=date.isoformat())
+        self.client.sell("002537.XSHE", 9.8, 100, order_time="2022-03-02 09:35:00")
+
+        r = self.client.metrics()
+        self.assertSetEqual(
+            {
+                "start",
+                "end",
+                "window",
+                "total_tx",
+                "total_profit",
+                "win_rate",
+                "mean_return",
+                "sharpe",
+                "sortino",
+                "calmar",
+                "max_drawdown",
+                "annual_return",
+                "volatility",
+            },
+            set(r.keys()),
         )
