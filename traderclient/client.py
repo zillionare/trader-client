@@ -231,7 +231,7 @@ class TradeClient:
         self,
         security: str,
         volume: int,
-        ttype: OrderType = OrderType.MARKET,
+        order_type: OrderType = OrderType.MARKET,
         limit_price: float = None,
         timeout: float = 0.5,
         **kwargs,
@@ -241,7 +241,7 @@ class TradeClient:
         Args:
             security (str): 证券代码
             volume (int): 买入数量
-            ttype (OrderType, optional): 市价买入类型，缺省为五档成交剩撤.
+            order_type (OrderType, optional): 市价买入类型，缺省为五档成交剩撤.
             limit_price (float, optional): 剩余转限价的模式下，设置的限价
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
 
@@ -258,7 +258,7 @@ class TradeClient:
             "security": security,
             "price": 0,
             "volume": volume,
-            "order_type": ttype,
+            "order_type": order_type,
             "timeout": timeout,
             **kwargs,
         }
@@ -303,7 +303,7 @@ class TradeClient:
         self,
         security: str,
         volume: int,
-        ttype: OrderType = OrderType.MARKET,
+        order_type: OrderType = OrderType.MARKET,
         limit_price: float = None,
         timeout: float = 0.5,
         **kwargs,
@@ -313,7 +313,7 @@ class TradeClient:
         Args:
             security (str): 证券代码
             volume (int): 卖出数量
-            ttype (OrderType, optional): 市价卖出类型，缺省为五档成交剩撤.
+            order_type (OrderType, optional): 市价卖出类型，缺省为五档成交剩撤.
             limit_price (float, optional): 剩余转限价的模式下，设置的限价
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
         """
@@ -322,7 +322,7 @@ class TradeClient:
             "security": security,
             "price": 0,
             "volume": volume,
-            "order_type": ttype,
+            "order_type": order_type,
             "timeout": timeout,
             **kwargs,
         }
