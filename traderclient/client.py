@@ -132,14 +132,18 @@ class TradeClient:
 
         return result
 
-    def positions(self) -> List:
+    def positions(self, dt: datetime.date = None) -> List:
         """取该子账户当前持仓信息
 
+        Args:
+            dt : 指定日期，默认为None，表示取当前日期（最新）的持仓信息
         Returns:
             List: 单个股票的信息为，代码，名称，总股数，可卖数，成本均价
         """
         url = self._cmd_url("positions")
-        result = get(url, headers=self.headers)
+        result = get(
+            url, params={"date": dt.strftime("%Y-%m-%d")}, headers=self.headers
+        )
         if result is None:
             logger.error("positions: failed to get information")
             return None
@@ -481,20 +485,44 @@ class TradeClient:
 
         return result
 
-    def metrics(self, start: datetime.date = None, end: datetime.date = None) -> Dict:
+    def metrics(
+        self,
+        start: datetime.date = None,
+        end: datetime.date = None,
+        baseline: str = None,
+    ) -> Dict:
         """获取指定时间段的账户指标评估数据
 
         Args:
-            start : _description_.
-            end : _description_.
+            start :
+            end :
+            baseline: the security code for baseline
 
         Returns:
             _description_
         """
         url = self._cmd_url("metrics")
-        result = get(url, headers=self.headers)
+        result = get(url, headers=self.headers, params={"baseline": baseline})
         if result is None:
             logger.error("info: failed to get information")
+            return None
+
+        return result["data"]
+
+    def bills(self) -> Dict:
+        """获取账户的交易、持仓、市值流水信息。
+
+        Returns:
+            Dict: 账户的交易、持仓、市值流水信息
+                - trades
+                - positions
+                - assets
+                - tx
+        """
+        url = self._cmd_url("bills")
+        result = get(url, headers=self.headers)
+        if result is None:
+            logger.error("bills: failed to get information")
             return None
 
         return result["data"]

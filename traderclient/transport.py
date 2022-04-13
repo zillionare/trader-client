@@ -56,7 +56,7 @@ def process_response_result(rsp, cmd: str = None):
                     "exec %s failed: response code: %d, extra msg: %s",
                     cmd,
                     rsp.status_code,
-                    rsp.text,
+                    rsp.reason,
                 )
 
     except Exception as e:

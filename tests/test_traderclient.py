@@ -16,8 +16,8 @@ token = "trader-client-test:15f53d68858e4f0cb683a5d64ab2723b"
 class TraderClientTest(unittest.TestCase):
     def setUp(self):
         enable_logging("info")
-        # url = "http://192.168.100.114:7080/backtest/api/trade/v0.2"
-        url = "http://localhost:3180/backtest/api/trade/v0.2"
+        url = "http://192.168.100.114:7080/backtest/api/trade/v0.2"
+        # url = "http://localhost:3180/backtest/api/trade/v0.2"
         name = "backtest"
 
         # disable proxy, if any
