@@ -141,6 +141,9 @@ class TradeClient:
             List: 单个股票的信息为，代码，名称，总股数，可卖数，成本均价
         """
         url = self._cmd_url("positions")
+        if dt is None:
+            dt = datetime.datetime.now().date()
+
         result = get(
             url, params={"date": dt.strftime("%Y-%m-%d")}, headers=self.headers
         )
