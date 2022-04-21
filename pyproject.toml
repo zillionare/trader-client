@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "zillionare-trader-client"
-version = "0.3.2"
+version = "0.3.3"
 homepage = "https://github.com/zillionare/trader-client"
 description = "Skeleton project created by Python Project Wizard (ppw)."
 authors = ["Aaron Yang <code@jieyu.ai>"]
