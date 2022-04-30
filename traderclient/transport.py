@@ -56,7 +56,7 @@ def process_response_result(rsp, cmd: str = None):
                     "exec %s failed: response code: %d, extra msg: %s",
                     cmd,
                     rsp.status_code,
-                    rsp.reason,
+                    rsp.reason + rsp.text,
                 )
 
     except Exception as e:
@@ -106,6 +106,31 @@ def post_json(url, params=None, headers=None):
 
     rsp = requests.post(url, json=params, headers=headers)
 
+    action = get_cmd(url)
+    result = process_response_result(rsp, action)
+
+    return result
+
+
+def delete(url, params=None, headers=None) -> Dict:
+    """从服务器上删除资源
+
+    Args:
+        url : 目标URL，带服务器信息
+        params : 查询参数
+        headers : 额外的header选项
+
+    Returns:
+        - status
+        - msg
+        - data
+    """
+    if headers is None:
+        headers = {"Request-ID": uuid.uuid4().hex}
+    else:
+        headers.update({"Request-ID": uuid.uuid4().hex})
+
+    rsp = requests.delete(url, params=params, headers=headers)
     action = get_cmd(url)
     result = process_response_result(rsp, action)
 

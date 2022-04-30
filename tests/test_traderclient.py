@@ -5,26 +5,31 @@
 import datetime
 import os
 import unittest
-from unicodedata import numeric
+import uuid
 
 from traderclient.client import TradeClient
 from traderclient.utils import enable_logging
-
-token = "trader-client-test:15f53d68858e4f0cb683a5d64ab2723b"
 
 
 class TraderClientTest(unittest.TestCase):
     def setUp(self):
         enable_logging("info")
-        url = "http://192.168.100.114:7080/backtest/api/trade/v0.2"
-        # url = "http://localhost:3180/backtest/api/trade/v0.2"
-        name = "backtest"
+        # url = "http://192.168.100.114:7080/backtest/api/trade/v0.2"
+        url = "http://localhost:3180/backtest/api/trade/v0.2"
+        name = "backtest-ut"
 
         # disable proxy, if any
         os.environ["http_proxy"] = ""
         os.environ["https_proxy"] = ""
 
-        self.client = TradeClient(url, name, token, is_backtest=True)
+        start = datetime.date(2022, 3, 1)
+        end = datetime.date(2022, 3, 31)
+
+        admin_token = os.environ.get("TRADER_ADMIN_TOKEN")
+        TradeClient.delete_account(url, admin_token, name)
+        self.client = TradeClient(
+            url, name, uuid.uuid4().hex, is_backtest=True, start=start, end=end
+        )
 
     def test_buy(self):
         """注意这里并非完整的测试用例，只是为了演示如何使用"""
@@ -112,6 +117,7 @@ class TraderClientTest(unittest.TestCase):
                 "window",
                 "total_tx",
                 "total_profit",
+                "total_profit_rate",
                 "win_rate",
                 "mean_return",
                 "sharpe",
@@ -120,6 +126,14 @@ class TraderClientTest(unittest.TestCase):
                 "max_drawdown",
                 "annual_return",
                 "volatility",
+                "baseline",
             },
             set(r.keys()),
         )
+
+    def test_bills(self):
+        r = self.client.bills()
+        self.assertIn("tx", r)
+        self.assertIn("trades", r)
+        self.assertIn("positions", r)
+        self.assertIn("assets", r)

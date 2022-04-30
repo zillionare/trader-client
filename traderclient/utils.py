@@ -31,7 +31,7 @@ def enable_logging(level: str = "info"):
 def get_cmd(url: str):
     cmd = url.split("/")[-1]
     return {
-        "accounts": "创建/查询账户",
+        "accounts": "创建/查询/删除账户",
         "info": "获取账户信息",
         "balance": "获取账户余额",
         "available_money": "获取可用资金",
@@ -50,4 +50,6 @@ def get_cmd(url: str):
         "get_trades_in_range": "获取指定时间段的成交记录",
         "get_entrusts_in_range": "获取指定时间段的委托记录",
         "metrics": "账户评估指标",
+        "start_backtest": "启动回测",
+        "bills": "交割单",
     }.get(cmd, "未知命令")

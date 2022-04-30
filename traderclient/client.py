@@ -1,12 +1,12 @@
 """Main module."""
 import datetime
 import logging
-import uuid
+import os
 from typing import Dict, List
 
 from traderclient.errors import CreateAccountError
 from traderclient.trade import OrderSide, OrderStatus, OrderType
-from traderclient.transport import get, post_json
+from traderclient.transport import delete, get, post_json
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +46,12 @@ class TradeClient:
         if is_backtest:
             capital = kwargs.get("capital", 1_000_000)
             commission = kwargs.get("commission", 1.5e-4)
+            start = kwargs.get("start")
+            end = kwargs.get("end")
+            if start is None or end is None:
+                raise ValueError("start and end must be specified in backtest mode")
 
-            self._create_account(acct, token, capital, commission)
+            self._start_backtest(acct, token, capital, commission, start, end)
 
     def _cmd_url(self, cmd: str) -> str:
         return f"{self._url}/{cmd}"
@@ -69,7 +73,15 @@ class TradeClient:
 
         return None
 
-    def _create_account(self, acct: str, token: str, capital: float, commission: float):
+    def _start_backtest(
+        self,
+        acct: str,
+        token: str,
+        capital: float,
+        commission: float,
+        start: datetime.date,
+        end: datetime.date,
+    ):
         """在回测模式下，创建一个新账户
 
         Args:
@@ -77,16 +89,24 @@ class TradeClient:
             token : 子账号对应的服务器访问令牌
             capital : 初始资金
             commission : 手续费率
+            start : 回测开始日期
+            end : 回测结束日期
         """
-        url = self._cmd_url("accounts")
+        url = self._cmd_url("start_backtest")
         data = {
             "name": acct,
             "token": token,
             "capital": capital,
             "commission": commission,
+            "start": start.isoformat(),
+            "end": end.isoformat(),
         }
 
-        result = post_json(url, data, headers=self.headers)
+        admin_token = os.environ.get("TRADER_ADMIN_TOKEN")
+        headers = {
+            "Authorization": admin_token,
+        }
+        result = post_json(url, data, headers=headers)
         if result is None:
             raise CreateAccountError("failed to create account")
 
@@ -165,7 +185,7 @@ class TradeClient:
         url = self._cmd_url("available_shares")
         data = {"security": security}
 
-        result = post_json(url, params=data, headers=self.headers)
+        result = get(url, params=data, headers=self.headers)
         if result is None:
             logger.error("positions: failed to get information")
             return None
@@ -529,3 +549,40 @@ class TradeClient:
             return None
 
         return result["data"]
+
+    @staticmethod
+    def list_accounts(url_prefix: str, admin_token: str):
+        """列举服务器上所有账户（不包含管理员账户）
+
+        Args:
+            url_prefix : 服务器地址及前缀
+            admin_token : 管理员token
+
+        Returns:
+            账户列表，每个元素包含：
+                - account_name
+                - token
+                - account_start_date
+                - capital   本金
+        """
+        url = f"{url_prefix}/accounts"
+        headers = {"Authorization": admin_token}
+        result = get(url, headers=headers)
+        return (result or {}).get("data", [])
+
+    @staticmethod
+    def delete_account(url_prefix: str, admin_token: str, account_name: str):
+        """删除账户
+
+        Args:
+            url_prefix (str): 服务器地址及前缀
+            admin_token (str): 管理员token
+            account_name (str): 待删除的账户名
+
+        Returns:
+            服务器上剩余账户个数
+        """
+        url = f"{url_prefix}/accounts"
+        headers = {"Authorization": admin_token}
+        result = delete(url, headers=headers, params={"name": account_name})
+        return result
