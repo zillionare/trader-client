@@ -1,43 +1,11 @@
-# Installation
+# 安装
 
-## Stable release
+## 稳定版本
 
-To install zillionare-trader-client, run this command in your
-terminal:
-
-``` console
-$ pip install traderclient
-```
-
-This is the preferred method to install zillionare-trader-client, as it will always install the most recent stable release.
-
-If you don't have [pip][] installed, this [Python installation guide][]
-can guide you through the process.
-
-## From source
-
-The source for zillionare-trader-client can be downloaded from
-the [Github repo][].
-
-You can either clone the public repository:
+请运行以下命令以安装traderclient:
 
 ``` console
-$ git clone git://github.com/zillionare/traderclient
+$ pip install zillionare-trader-client
 ```
-
-Or download the [tarball][]:
-
-``` console
-$ curl -OJL https://github.com/zillionare/traderclient/tarball/master
-```
-
-Once you have a copy of the source, you can install it with:
-
-``` console
-$ pip install .
-```
-
-  [pip]: https://pip.pypa.io
-  [Python installation guide]: http://docs.python-guide.org/en/latest/starting/installation/
-  [Github repo]: https://github.com/%7B%7B%20cookiecutter.github_username%20%7D%7D/%7B%7B%20cookiecutter.project_slug%20%7D%7D
-  [tarball]: https://github.com/%7B%7B%20cookiecutter.github_username%20%7D%7D/%7B%7B%20cookiecutter.project_slug%20%7D%7D/tarball/master
+# 配置
+运行trader client时，需要提供交易服务器(zillionare-trader-server或者zillionare-backtest-server)的地址。如果需要管理回测服务器，还需要提供admin账户的token。

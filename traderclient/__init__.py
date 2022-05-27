@@ -1,4 +1,4 @@
-from traderclient.client import TradeClient
-from traderclient.trade import OrderSide, OrderStatus, OrderType
+from traderclient.client import TraderClient
+from traderclient.types import OrderSide, OrderStatus, OrderType
 
-__all__ = ["TradeClient", "OrderStatus", "OrderSide", "OrderType"]
+__all__ = ["TraderClient", "OrderStatus", "OrderSide", "OrderType"]

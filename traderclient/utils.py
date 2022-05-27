@@ -33,8 +33,6 @@ def get_cmd(url: str):
     return {
         "accounts": "创建/查询/删除账户",
         "info": "获取账户信息",
-        "balance": "获取账户余额",
-        "available_money": "获取可用资金",
         "position": "获取持仓信息",
         "buy": "买入股票",
         "sell": "卖出股票",

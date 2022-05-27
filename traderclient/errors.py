@@ -1,15 +1,12 @@
-class Error(Exception):
-    """错误基类"""
+class TradeError(Exception):
+    """交易中的异常
 
-    def __init__(self, message: str, *args):
+    当捕获异常后，可以通过status_code和message属性来获取错误代码和详细错误信息。
+    """
+
+    def __init__(self, code: int, message: str):
+        self.code = code
         self.message = message
-        self.args = args
 
     def __str__(self):
         return f"{self.message}: {self.args}"
-
-
-class CreateAccountError(Error):
-    """创建账户失败"""
-
-    pass

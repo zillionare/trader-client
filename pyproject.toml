@@ -1,9 +1,9 @@
 [tool]
 [tool.poetry]
 name = "zillionare-trader-client"
-version = "0.3.4"
+version = "0.3.5"
 homepage = "https://github.com/zillionare/trader-client"
-description = "Skeleton project created by Python Project Wizard (ppw)."
+description = "Zillionare Trader Client"
 authors = ["Aaron Yang <code@jieyu.ai>"]
 readme = "README.md"
 license =  "MIT"
@@ -32,19 +32,22 @@ pytest-cov  = { version = "2.10.1", optional = true}
 tox  = { version = "^3.20.1", optional = true}
 virtualenv  = { version = "^20.2.2", optional = true}
 pip  = { version = "^20.3.1", optional = true}
-mkdocs  = { version = "^1.1.2", optional = true}
-mkdocs-include-markdown-plugin  = { version = "^1.0.0", optional = true}
-mkdocs-material  = { version = "^6.1.7", optional = true}
-mkdocstrings  = { version = "^0.13.6", optional = true}
-mkdocs-material-extensions  = { version = "^1.0.1", optional = true}
+mkdocs  = { version = "^1.2.3", optional = true}
+mkdocs-include-markdown-plugin  = { version = "^3.2.3", optional = true}
+mkdocs-material  = { version = "^8.1.11", optional = true}
+mkdocstrings  = { version = "^0.18.0", optional = true}
+mkdocs-material-extensions  = { version = "^1.0.3", optional = true}
+mkdocs-autorefs = {version = "^0.4.1", optional = true}
 twine  = { version = "^3.3.0", optional = true}
-mkdocs-autorefs = {version = "0.1.1", optional = true}
 pre-commit = {version = "^2.12.0", optional = true}
 toml = {version = "^0.10.2", optional = true}
-requests = "^2.27.1"
-arrow = "0.15.8"
+arrow = "^1.2.2"
 enum34 = "^1.1.10"
 livereload = {version = "^2.6.3", optional = true}
+httpx = "^0.20"
+sanic = {version = "^22.3.2", optional = true}
+fire = "^0.4.0"
+numpy = "^1.22.4"
 
 [tool.poetry.extras]
 test = [
@@ -53,7 +56,8 @@ test = [
     "isort",
     "flake8",
     "flake8-docstrings",
-    "pytest-cov"
+    "pytest-cov",
+    "sanic"
     ]
 
 dev = ["tox", "pre-commit", "virtualenv", "pip", "twine", "toml"]
@@ -65,14 +69,17 @@ doc = [
     "mkdocstrings",
     "mkdocs-material-extension",
     "mkdocs-autorefs",
+    "Jinja2",
     "livereload"
     ]
-
 
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+bt = 'traderclient.cli:main'
 
 [tool.black]
 line-length = 88
@@ -85,6 +92,7 @@ exclude = '''
   | \.mypy_cache
   | \.tox
   | \.venv
+  | \.history
   | _build
   | buck-out
   | build

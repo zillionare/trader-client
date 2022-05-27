@@ -4,7 +4,7 @@
 import datetime
 import logging
 
-from traderclient import OrderSide, OrderStatus, OrderType, TradeClient
+from traderclient import OrderSide, OrderStatus, OrderType, TraderClient
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def test_info():
     token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
 
     # initialize client instance
-    client = TradeClient(url, acct, token)
+    client = TraderClient(url, acct, token)
 
     print("\n------------- info --------------")
     result = client.info()
@@ -67,7 +67,7 @@ def test_entrusts():
     token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
 
     # initialize client instance
-    client = TradeClient(url, acct, token)
+    client = TraderClient(url, acct, token)
 
     print("\n------------- today_entrusts --------------")
     result = client.today_entrusts()
@@ -95,7 +95,7 @@ def test_functions():
     token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
 
     # initialize client instance
-    client = TradeClient(url, acct, token)
+    client = TraderClient(url, acct, token)
 
     print("\n------------- cancel_entrust --------------")
     result = client.cancel_entrust("xxx-xxx-xxx-xxxxxxx")
@@ -123,7 +123,7 @@ def test_trade_functions():
     token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
 
     # initialize client instance
-    client = TradeClient(url, acct, token)
+    client = TraderClient(url, acct, token)
 
     # test buy
     print("\n------------- buy --------------")
@@ -169,7 +169,7 @@ def test_sell_percent():
     token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
 
     # initialize client instance
-    client = TradeClient(url, acct, token)
+    client = TraderClient(url, acct, token)
 
     # test buy
     print("\n------------- sell_percent --------------")
@@ -194,7 +194,7 @@ def test_sell_all():
     token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
 
     # initialize client instance
-    client = TradeClient(url, acct, token)
+    client = TraderClient(url, acct, token)
 
     # test buy
     print("\n------------- sell_all --------------")
@@ -219,7 +219,7 @@ def test_get_data_in_range():
     token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
 
     # initialize client instance
-    client = TradeClient(url, acct, token)
+    client = TraderClient(url, acct, token)
 
     print("\n------------- get_trade_in_range --------------")
 
@@ -258,15 +258,15 @@ def test_get_data_in_range():
     print(result)
 
 
-if __name__ == "__main__":
-    init_logging(logging.DEBUG)
+# if __name__ == "__main__":
+#     init_logging(logging.DEBUG)
 
-    # test_info()
-    # test_functions()
-    # test_trade_functions()
-    # test_sell_percent()
-    # test_sell_all()
-    # test_get_data_in_range()
+#     # test_info()
+#     # test_functions()
+#     # test_trade_functions()
+#     # test_sell_percent()
+#     # test_sell_all()
+#     # test_get_data_in_range()
 
-    waiting = input("press any key to continue...")
-    print(waiting)
+#     waiting = input("press any key to continue...")
+#     print(waiting)

@@ -1,4 +1,4 @@
-# zillionare-trader-client
+# 大富翁交易客户端
 
 
 <p align="center">
@@ -7,28 +7,19 @@
         alt = "Release Status">
 </a>
 
-<a href="https://github.com/zillionare/zillionare-trader-client/actions">
-    <img src="https://github.com/zillionare/zillionare-trader-client/actions/workflows/main.yml/badge.svg?branch=release" alt="CI Status">
-</a>
-
-<a href="https://zillionare-trader-client.readthedocs.io/en/latest/?badge=latest">
-    <img src="https://readthedocs.org/projects/zillionare-trader-client/badge/?version=latest" alt="Documentation Status">
-</a>
-
 </p>
 
+trade-client是大富翁量化框架中用来交易的客户端。它对回测和实盘提供了几乎相同的接口，从而使得经过回测的策略，可以无缝切换到实盘环境中。
 
-Skeleton project created by Python Project Wizard (ppw)
+## 功能
 
-
-* Free software: MIT
-* Documentation: <https://zillionare-trader-client.readthedocs.io>
-
-
-## Features
-
-* TODO
+* 进行实盘和回测交易
+* 获取账号基本信息，比如本金、资产、持仓、盈亏及盈亏比等。
+* 交易函数，比如买入（限价和市价）、卖出（限价和市价）、撤单等
+* 查询委托、成交、持仓（当日和指定日期）
+* 查询一段时间内的账户评估指标，比如sharpe, sortino, calmar, voliality, win rate, max drawdown等。
+* 查询参照标的同期指标。
 
 ## Credits
 
-This package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and the [zillionare/cookiecutter-pypackage](https://github.com/zillionare/cookiecutter-pypackage) project template.
+This package was created with [zillionare/python project wizard](https://zillionare.github.io/python-project-wizard) project template.
