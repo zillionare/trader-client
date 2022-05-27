@@ -64,6 +64,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#交易" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -220,6 +225,18 @@
 
 
   <li class="md-tabs__item">
+    <a href="../developer/" class="md-tabs__link">
+      Developer
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
     <a href="../contributing/" class="md-tabs__link">
       Contributing
     </a>
@@ -345,9 +362,52 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Usage
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Usage
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#交易" class="md-nav__link">
+    交易
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#状态跟踪" class="md-nav__link">
+    状态跟踪
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#策略评估" class="md-nav__link">
+    策略评估
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -363,6 +423,21 @@
     <li class="md-nav__item">
       <a href="../api/" class="md-nav__link">
         API
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer/" class="md-nav__link">
+        Developer
       </a>
     </li>
   
@@ -431,6 +506,35 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#交易" class="md-nav__link">
+    交易
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#状态跟踪" class="md-nav__link">
+    状态跟踪
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#策略评估" class="md-nav__link">
+    策略评估
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -459,10 +563,12 @@
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">traderclient</span> <span class="kn">import</span> <span class="n">TraderClient</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">traderclient</span> <span class="kn">import</span> <span class="n">TraderClient</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
 
-<span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://localhost:7080/trader/api/v0.2&quot;</span>
+<span class="c1"># 请指向zillionare trader server或者backtest server</span>
+<span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://localhost:7080/trader/api/v0.3&quot;</span>
 <span class="n">account</span> <span class="o">=</span> <span class="s2">&quot;test-account&quot;</span>
 <span class="n">token</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
 <span class="n">client</span><span class="p">:</span> <span class="n">TraderClient</span> <span class="o">=</span> <span class="n">TraderClient</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">account</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
@@ -470,7 +576,7 @@
 <span class="n">code</span> <span class="o">=</span> <span class="s2">&quot;000001.XSHE&quot;</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">buy</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="mf">9.5</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-<p>上述代码构建了一个实时交易客户端（即实盘交易或者模拟盘交易，对应于回测），并且调用了buy方法，购买了一手股票。注意我们使用的证券代码必须包含交易所标志。".XSHE"表示深交所，".XSHG"表示上交所。</p>
+<p>上述代码构建了一个实时交易客户端（即实盘交易或者模拟盘交易，对应于回测），并且调用了<code>buy</code>方法，购买了一手股票。注意我们使用的证券代码必须包含交易所标志。".XSHE"表示深交所，".XSHG"表示上交所。</p>
 <p>这里的account和token需要由zillionare-trader-server来分配和配置。</p>
 <p>在进行回测时，只需要在构建TraderClient时，传入<code>is_backtest</code> = True，并且将<code>url</code>指向回测服务器即可。回测服务器会使用您提供的<code>account</code>与<code>token</code>生成一个新的回测账户，后面所有的回测都将在这个环境下执行。</p>
 <div class="admonition info">
@@ -494,7 +600,7 @@
 <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://localhost:7080/backtest-trader/api/v0.2&quot;</span>
 <span class="n">account</span> <span class="o">=</span> <span class="s2">&quot;my great strategy-v1&quot;</span>
 <span class="n">token</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span>
-<span class="n">client</span><span class="p">:</span> <span class="n">TraderClient</span> <span class="o">=</span> <span class="n">TraderClient</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">account</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">is_backtest</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">principle</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">,</span> <span class="n">commission</span><span class="o">=</span><span class="mf">1.5e-4</span><span class="p">)</span>
+<span class="n">client</span><span class="p">:</span> <span class="n">TraderClient</span> <span class="o">=</span> <span class="n">TraderClient</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">account</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">is_backtest</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">principal</span><span class="o">=</span><span class="mi">1_000_000</span><span class="p">,</span> <span class="n">commission</span><span class="o">=</span><span class="mf">1.5e-4</span><span class="p">)</span>
 
 <span class="n">code</span> <span class="o">=</span> <span class="s2">&quot;000001.XSHE&quot;</span>
 <span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">buy</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="mf">9.5</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">order_time</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">31</span><span class="p">))</span>
@@ -502,6 +608,14 @@
 注意在回测模式下，您可以指定本金和手续费，但计算alpha等指标使用的risk_free利率则是在回测服务器上配置的，以便您可以比较不同策略的数据表现。</p>
 <p>另一个值得注意的地方是，在回测模式下买卖股票，必须传入<code>order_time</code>，原因是，在实盘模式下，下单时间总是当前时间，而在回测模式下，我们实际上是在过去的某一个时间点进行下单，而这个时间点，只有策略知道，回测服务器不可能知道。</p>
 <p>在回测模式下使用其它API时，您可能需要根据具体情况，传入“当前时间”或者对应的时间点。回测模式下的“现在”，一般是指服务器最后接收的一个<code>buy</code>或者<code>sell</code>指令中的时间。</p>
+<h3 id="交易">交易<a class="headerlink" href="#交易" title="Permanent link">&para;</a></h3>
+<p>您可以通过<a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.buy">buy</a>, <a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.market_buy">market_buy</a>, <a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.sell">sell</a>, <a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.market_sell">market_sell</a>和<a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.sell_percent">sell_percent</a>来进行交易。</p>
+<h3 id="状态跟踪">状态跟踪<a class="headerlink" href="#状态跟踪" title="Permanent link">&para;</a></h3>
+<p>您可以通过<a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.info">info</a>来查看账户的基本信息，比如当前总资产、持仓、本金、盈利等。如果您只想得到单个信息，您也可以使用<a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.principal">principal</a>、<a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.balance">balance</a>、<a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.available_money">available_money</a>来获取。</p>
+<p><a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.positions">positions</a>提供了持仓信息，您还可以通过<a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.available_shares">available_shares</a>来查询个股当前可售的股票数量。</p>
+<p><a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.bills">bills</a>来查看账户的持仓、交易历史记录。</p>
+<h3 id="策略评估">策略评估<a class="headerlink" href="#策略评估" title="Permanent link">&para;</a></h3>
+<p><a class="autorefs autorefs-internal" href="../api/#traderclient.client.TraderClient.metrics">metrics</a>方法将返回策略的各项指标，比如sharpe, sortino, calmar, win rate, max drawdown等。您还可以传入一个参考标的，backtest将对参考标的也同样计算上述指标。</p>
 
               
             </article>
