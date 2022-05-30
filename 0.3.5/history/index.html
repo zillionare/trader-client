@@ -474,6 +474,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#035-2022-05-27" class="md-nav__link">
+    0.3.5 (2022-05-27)
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -526,6 +533,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#035-2022-05-27" class="md-nav__link">
+    0.3.5 (2022-05-27)
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -556,6 +570,15 @@
 <h3 id="010-2022-03-07">0.1.0 (2022-03-07)<a class="headerlink" href="#010-2022-03-07" title="Permanent link">&para;</a></h3>
 <ul>
 <li>First release on PyPI.</li>
+</ul>
+<h3 id="035-2022-05-27">0.3.5 (2022-05-27)<a class="headerlink" href="#035-2022-05-27" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Use http status code to determine if the request was successful, rather than wrap status in payload, and raise TradeError if there's exception.</li>
+<li>Rename capital to principal, tradeclient to TraderClient</li>
+<li>Use binary to convey data between server/client for interface <code>position</code>, <code>info</code>, <code>metrics</code></li>
+<li><code>balance</code>, <code>available_money</code>, <code>assets</code> interface will all goto <code>/info</code> endpoint</li>
+<li><code>position</code> and <code>available_shares</code> interface will all goto <code>/position</code> endpoint</li>
+<li>Add documentation</li>
 </ul>
 <!-- END INCLUDE -->
 
