@@ -5,8 +5,8 @@ from typing import Dict, List, Optional
 import arrow
 import numpy as np
 
+from traderclient.datatypes import OrderSide, OrderStatus, OrderType
 from traderclient.transport import delete, get, post_json
-from traderclient.types import OrderSide, OrderStatus, OrderType
 
 logger = logging.getLogger(__name__)
 
@@ -529,11 +529,7 @@ class TraderClient:
             return None
 
         url = self._cmd_url("sell_percent")
-        parameters = {
-            "security": security,
-            "price": price,
-            "timeout": timeout,
-        }
+        parameters = {"security": security, "price": price, "timeout": timeout}
 
         r = post_json(url, params=parameters, headers=self.headers)
         for key in ("time", "created_at", "recv_at"):
@@ -558,10 +554,7 @@ class TraderClient:
             return None
 
         url = self._cmd_url("sell_all")
-        parameters = {
-            "percent": percent,
-            "timeout": timeout,
-        }
+        parameters = {"percent": percent, "timeout": timeout}
 
         return post_json(url, params=parameters, headers=self.headers)
 

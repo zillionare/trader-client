@@ -4,7 +4,7 @@
 import datetime
 import logging
 
-from traderclient import OrderSide, OrderStatus, OrderType, TraderClient
+from traderclient import TraderClient
 
 logger = logging.getLogger(__name__)
 
@@ -270,3 +270,35 @@ def test_get_data_in_range():
 
 #     waiting = input("press any key to continue...")
 #     print(waiting)
+
+
+# the following fits backtesting server only
+
+
+def backtest_trade():
+    import uuid
+
+    url = "http://192.168.100.114:7080/backtest/api/trade/v0.3/"
+
+    token = uuid.uuid4().hex
+    account = f"my-great-strategy-v1-{token[-4:]}"
+    start = datetime.date(2022, 5, 18)
+    end = datetime.date(2022, 5, 25)
+    client: TraderClient = TraderClient(
+        url, account, token, is_backtest=True, start=start, end=end
+    )
+
+    code = "000001.XSHE"
+
+    buy = client.buy(code, 16, 100, order_time="2022-05-20 09:31:00")
+    print(buy)
+
+    sell = client.sell(code, 10.1, 1000, order_time="2022-05-23 14:57:00")
+    print(sell)
+
+    print(client.metrics())
+    print(client.bills())
+
+
+if __name__ == "__main__":
+    backtest_trade()

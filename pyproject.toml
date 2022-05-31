@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "zillionare-trader-client"
-version = "0.3.5"
+version = "0.3.6"
 homepage = "https://github.com/zillionare/trader-client"
 description = "Zillionare Trader Client"
 authors = ["Aaron Yang <code@jieyu.ai>"]

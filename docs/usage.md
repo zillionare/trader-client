@@ -14,7 +14,7 @@ code = "000001.XSHE"
 r = client.buy(code, 9.5, 100)
 ```
 
-上述代码构建了一个实时交易客户端（即实盘交易或者模拟盘交易，对应于回测），并且调用了`buy`方法，购买了一手股票。注意我们使用的证券代码必须包含交易所标志。".XSHE"表示深交所，".XSHG"表示上交所。
+上述代码构建了一个实时交易客户端（即实盘交易，而非回测），并且调用了`buy`方法，购买了一手股票。注意我们使用的证券代码必须包含交易所标志。".XSHE"表示深交所，".XSHG"表示上交所。
 
 这里的account和token需要由zillionare-trader-server来分配和配置。
 
@@ -28,19 +28,32 @@ from traderclient import TraderClient
 import uuid
 import datetime
 
-url = "http://localhost:7080/backtest-trader/api/v0.2"
-account = "my great strategy-v1"
+url = "http://backtest_server:7080/backtest/api/trade/v0.3/"
+
+# to start a new backtest, please always generate a new account and token
 token = uuid.uuid4().hex
-client: TraderClient = TraderClient(url, account, token, is_backtest=True, principal=1_000_000, commission=1.5e-4)
+account = f"my-great-strategy-v1-{token[-4:]}"
+start = datetime.date(2022, 3, 1)
+end = datetime.date(2022, 3, 14)
+client: TraderClient = TraderClient(url, account, token, is_backtest=True, start = start, end=end)
 
 code = "000001.XSHE"
-r = client.buy(code, 9.5, 100, order_time=datetime.datetime(2022, 5, 9, 9, 31))
+# please specify order_time if it's backtest mode
+r = client.buy(code, 9.5, 100, order_time="2022-03-07 09:31:00")
+print(r)
 ```
 注意在回测模式下，您可以指定本金和手续费，但计算alpha等指标使用的risk_free利率则是在回测服务器上配置的，以便您可以比较不同策略的数据表现。
 
-另一个值得注意的地方是，在回测模式下买卖股票，必须传入`order_time`，原因是，在实盘模式下，下单时间总是当前时间，而在回测模式下，我们实际上是在过去的某一个时间点进行下单，而这个时间点，只有策略知道，回测服务器不可能知道。
+另一个值得注意的地方是，在回测模式下买卖股票，必须传入`order_time`，原因是，在实盘模式下，下单时间总是当前时间，因此这个参数可以省略；而在回测模式下，我们实际上是在过去的某一个时间点进行下单，而这个时间点，只有策略知道，回测服务器不可能知道，因此您必须提供给回测服务器。
 
 在回测模式下使用其它API时，您可能需要根据具体情况，传入“当前时间”或者对应的时间点。回测模式下的“现在”，一般是指服务器最后接收的一个`buy`或者`sell`指令中的时间。
+
+!!!Tips
+    如何获取回测服务器的地址？您可以在浏览器地址栏中输入http://server:port/，这样将会返回如下提示：
+    ```
+    Welcome to zillionare bactest server. The endpoints is /backtest/api/trade/v0.3
+    ```
+    因此trader client初始化时，地址应该设置为http://server:port/backtest/api/trade/v0.3
 
 ## 交易
 

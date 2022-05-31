@@ -30,40 +30,24 @@ class TransportTest(unittest.TestCase):
             params={"status": 421, "reason": "no enough shares to sell"},
         )
 
-        with self.assertRaises(
-            httpx.HTTPStatusError,
-        ):
+        with self.assertRaises(httpx.HTTPStatusError):
             process_response_result(r)
 
-        r = httpx.post(
-            self.url + "echo",
-            json={
-                "security": "000001.XSHE",
-            },
-        )
+        r = httpx.post(self.url + "echo", json={"security": "000001.XSHE"})
 
         data = process_response_result(r)
-        self.assertDictEqual(
-            data,
-            {
-                "security": "000001.XSHE",
-            },
-        )
+        self.assertDictEqual(data, {"security": "000001.XSHE"})
 
         r = httpx.get(
             self.url + "echo",
             params={
                 "status": 499,
                 "reason": "no enough shares to sell",
-                "data": {
-                    "security": "000001.XSHE",
-                },
+                "data": {"security": "000001.XSHE"},
             },
         )
 
-        with self.assertRaises(
-            TradeError,
-        ) as cm:
+        with self.assertRaises(TradeError) as cm:
             process_response_result(r)
 
         self.assertEqual(cm.exception.code, 499)
