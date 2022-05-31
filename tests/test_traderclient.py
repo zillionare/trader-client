@@ -9,6 +9,7 @@ import numpy as np
 
 from tests import assert_deep_almost_equal
 from traderclient.client import TraderClient
+from traderclient.errors import TradeError
 from traderclient.utils import enable_logging
 
 
@@ -141,10 +142,13 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
             (9.57, 500, "2022-03-08 09:31:00"),
             (9.08, 500, "2022-03-09 09:31:00"),
             (9.1, 500, "2022-03-10 09:31:00"),
-            (9.65, 500, "2022-03-11 09:31:00"),
+            (9.65, 500, "2022-03-11 09:31:00"),  # this deal won't close
             (9.65, 500, "2022-03-14 09:31:00"),
         ]:
-            self.client.buy(hljh, price, volume, order_time=tm)
+            try:
+                self.client.buy(hljh, price, volume, order_time=tm)
+            except TradeError:
+                pass
 
         self.client.sell(
             hljh, 9.1, 5000, order_time=datetime.datetime(2022, 3, 14, 15, 0)
@@ -155,19 +159,19 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
             "start": datetime.date(2022, 3, 1),
             "end": datetime.date(2022, 3, 14),
             "window": 10,
-            "total_tx": 9,
-            "total_profit": -779.1568067073822,
-            "total_profit_rate": -0.0007791568067073822,
-            "win_rate": 0.4444444444444444,
-            "mean_return": -6.952228828114507e-05,
-            "sharpe": -1.7461,
-            "sortino": -2.51418,
-            "calmar": -3.9873290,
-            "max_drawdown": -0.004438,
-            "annual_return": -0.017698244,
-            "volatility": 0.02721410,
+            "total_tx": 8,
+            "total_profit": -343.13999999978114,
+            "total_profit_rate": -0.0003431399999997811,
+            "win_rate": 0.625,
+            "mean_return": -2.9972019661695835e-05,
+            "sharpe": -1.439194474227825,
+            "sortino": -2.1212244527176227,
+            "calmar": -1.8723514035186801,
+            "max_drawdown": -0.0041827334569883405,
+            "annual_return": -0.00783154685873666,
+            "volatility": 0.026093033031478072,
             "baseline": {
-                "code": hljh,
+                "code": "002537.XSHE",
                 "win_rate": 0.5555555555555556,
                 "sharpe": 0.6190437353475076,
                 "max_drawdown": -0.17059373779725692,
