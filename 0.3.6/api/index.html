@@ -1198,6 +1198,7 @@ TraderClient        </code>
         <span class="sd">&quot;&quot;&quot;账户信息</span>
 
 <span class="sd">        Returns:</span>
+<span class="sd">            dict: 账户信息</span>
 
 <span class="sd">            - name: str, 账户名</span>
 <span class="sd">            - principal: float, 初始资金</span>
@@ -2685,17 +2686,20 @@ TraderClient        </code>
   </thead>
   <tbody>
     <tr>
-      <td><code>- name</code></td>
-      <td><p>str, 账户名
-- principal: float, 初始资金
-- assets: float, 当前资产
-- start: datetime.date, 账户创建时间
-- last_trade: datetime.datetime, 最后一笔交易时间
-- available: float, 可用资金
-- market_value: 股票市值
-- pnl: 盈亏(绝对值)
-- ppnl: 盈亏(百分比)，即pnl/principal
-- positions: 当前持仓，dtype为<code>[("security", "O"), ("shares", "&lt;f8"), ("sellable", "&lt;f8"), ("price", "&lt;f8")]</code>的numpy structured array</p></td>
+      <td><code>dict</code></td>
+      <td><p>账户信息</p>
+<ul>
+<li>name: str, 账户名</li>
+<li>principal: float, 初始资金</li>
+<li>assets: float, 当前资产</li>
+<li>start: datetime.date, 账户创建时间</li>
+<li>last_trade: datetime.datetime, 最后一笔交易时间</li>
+<li>available: float, 可用资金</li>
+<li>market_value: 股票市值</li>
+<li>pnl: 盈亏(绝对值)</li>
+<li>ppnl: 盈亏(百分比)，即pnl/principal</li>
+<li>positions: 当前持仓，dtype为<code>[("security", "O"), ("shares", "&lt;f8"), ("sellable", "&lt;f8"), ("price", "&lt;f8")]</code>的numpy structured array</li>
+</ul></td>
     </tr>
   </tbody>
 </table>
@@ -2705,6 +2709,7 @@ TraderClient        </code>
     <span class="sd">&quot;&quot;&quot;账户信息</span>
 
 <span class="sd">    Returns:</span>
+<span class="sd">        dict: 账户信息</span>
 
 <span class="sd">        - name: str, 账户名</span>
 <span class="sd">        - principal: float, 初始资金</span>
