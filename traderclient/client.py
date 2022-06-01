@@ -98,6 +98,9 @@ class TraderClient:
     def info(self) -> Dict:
         """账户信息
 
+        Args:
+            dt: 日期，默认为None，表示当前日期
+
         Returns:
             dict: 账户信息
 
@@ -110,7 +113,7 @@ class TraderClient:
             - market_value: 股票市值
             - pnl: 盈亏(绝对值)
             - ppnl: 盈亏(百分比)，即pnl/principal
-            - positions: 当前持仓，dtype为`[("security", "O"), ("shares", "<f8"), ("sellable", "<f8"), ("price", "<f8")]`的numpy structured array
+            - positions: 当前持仓，dtype为[position_dtype](https://zillionare.github.io/backtesting/0.3.2/api/trade/#backtest.trade.datatypes.position_dtype)的numpy structured array
 
         """
         # todo: added pnl, ppnl. available, market_value
@@ -185,7 +188,7 @@ class TraderClient:
         Args:
             dt: 指定日期，默认为None，表示取当前日期（最新）的持仓信息
         Returns:
-            np.ndarray: 持仓信息，包含security, alias, shares, sellable和price字段的numpy structured array。如果是回测模式，则不包含alias字段
+            np.ndarray: dtype为[position_dtype](https://zillionare.github.io/backtesting/0.3.2/api/trade/#backtest.trade.datatypes.position_dtype)的numpy structured array
         """
         # todo: 返回类型更改为np.ndarray，字段增加alias
         # todo: 服务器应该使用r.raw来返回pickle对象
