@@ -109,7 +109,7 @@ class TraderClient:
             - market_value: 股票市值
             - pnl: 盈亏(绝对值)
             - ppnl: 盈亏(百分比)，即pnl/principal
-            - positions: 当前持仓，dtype为position_dtype的numpy structured array
+            - positions: 当前持仓，dtype为`[("security", "O"), ("shares", "<f8"), ("sellable", "<f8"), ("price", "<f8")]`的numpy structured array
         """
         # todo: added pnl, ppnl. available, market_value
         # todo: removed trades
