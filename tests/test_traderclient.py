@@ -58,10 +58,10 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
 
         info = self.client.info()
         self.assertAlmostEqual(info["available"], 995289.5289618492, 2)
-        self.assertAlmostEqual(info["market_value"], 4780.0, 2)
-        self.assertAlmostEqual(info["assets"], 1000069.528, 2)
-        self.assertAlmostEqual(info["pnl"], 69.5289, 2)
-        self.assertAlmostEqual(info["ppnl"], 69.5289 / 1_000_000, 2)
+        self.assertAlmostEqual(info["market_value"], 4750.0, 2)
+        self.assertAlmostEqual(info["assets"], 1000039.528, 2)
+        self.assertAlmostEqual(info["pnl"], 39.5289, 2)
+        self.assertAlmostEqual(info["ppnl"], 39.5289 / 1_000_000, 2)
         self.assertEqual(datetime.date(2022, 3, 1), info["start"])
         self.assertEqual(datetime.date(2022, 3, 1), info["last_trade"])
         self.assertEqual(1_000_000, info["principal"])
@@ -75,10 +75,10 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
         self.assertAlmostEqual(self.client.available_money, 995289.528, 2)
         balance = self.client.balance()
         self.assertAlmostEqual(balance["available"], 995289.528, 2)
-        self.assertAlmostEqual(balance["market_value"], 4780, 2)
-        self.assertAlmostEqual(balance["assets"], 1000069.528, 2)
-        self.assertAlmostEqual(balance["pnl"], 69.5289, 2)
-        self.assertAlmostEqual(balance["ppnl"], 69.5289 / 1_000_000, 2)
+        self.assertAlmostEqual(balance["market_value"], 4750, 2)
+        self.assertAlmostEqual(balance["assets"], 1000039.528, 2)
+        self.assertAlmostEqual(balance["pnl"], 39.5289, 2)
+        self.assertAlmostEqual(balance["ppnl"], 39.5289 / 1_000_000, 2)
 
     def test_positions(self):
         # this also test available_shares
