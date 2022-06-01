@@ -96,10 +96,10 @@ class TraderClient:
         post_json(url, data)
 
     def info(self) -> Dict:
-        """账户信息
+        """账户的当前基本信息，比如账户名、资金、持仓和资产等
 
-        Args:
-            dt: 日期，默认为None，表示当前日期
+        !!! info
+            在回测模式下，info总是返回`last_trade`对应的那天的信息，因为这就是回测时的当前日期。
 
         Returns:
             dict: 账户信息

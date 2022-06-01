@@ -20,6 +20,27 @@ trade-client是大富翁量化框架中用来交易的客户端。它对回测�
 * 查询一段时间内的账户评估指标，比如sharpe, sortino, calmar, voliality, win rate, max drawdown等。
 * 查询参照标的同期指标。
 
+!!!Warning
+    在回测模式下，注意可能引起账户数据改变的操作，比如`buy`、`sell`等，必须严格按时间顺序执行，比如下面的例子：
+    ```
+    client.buy(..., order_time=datetime.datetime(2022, 3, 1, 9, 31))
+    client.buy(..., order_time=datetime.datetime(2022, 3, 4, 14, 31))
+    client.sell(..., order_time=datetime.datetime(2022, 3, 7, 9, 31))
+    ```
+    是正确的执行顺序，但下面的执行顺序必然产生错误的结果(实际上服务器也会进行检测并报错误)
+    ```
+    client.buy(..., order_time=datetime.datetime(2022, 3, 4, 14, 31))
+    client.buy(..., order_time=datetime.datetime(2022, 3, 1, 9, 31))
+    client.sell(..., order_time=datetime.datetime(2022, 3, 7, 9, 31))
+    ```
+
+    但是下面的执行顺序并不会报错：
+    ```
+    client.buy(..., order_time=datetime.datetime(2022, 3, 1, 14, 31))
+    client.sell(..., order_time=datetime.datetime(2022, 3, 1, 9, 31))
+    ```
+    策略需要自行决定是否允许这样的情况发生，以及如果发生失，会产生什么样的后果。
+
 ## Credits
 
 This package was created with [zillionare/python project wizard](https://zillionare.github.io/python-project-wizard) project template.
