@@ -99,6 +99,7 @@ class TraderClient:
         """账户信息
 
         Returns:
+            dict: 账户信息
 
             - name: str, 账户名
             - principal: float, 初始资金
@@ -110,6 +111,7 @@ class TraderClient:
             - pnl: 盈亏(绝对值)
             - ppnl: 盈亏(百分比)，即pnl/principal
             - positions: 当前持仓，dtype为`[("security", "O"), ("shares", "<f8"), ("sellable", "<f8"), ("price", "<f8")]`的numpy structured array
+
         """
         # todo: added pnl, ppnl. available, market_value
         # todo: removed trades
