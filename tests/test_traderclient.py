@@ -129,6 +129,24 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
         self.assertAlmostEqual(tx["price"], 10.45, 2)
         self.assertEqual(datetime.datetime(2022, 3, 2, 10, 4), tx["time"])
 
+    def test_sell_percent(self):
+        self.client.buy(
+            "002537.XSHE", 10, 500, order_time=datetime.datetime(2022, 3, 1, 10, 4)
+        )
+        r = self.client.sell(
+            "002537.XSHE", 10, 200, order_time=datetime.datetime(2022, 3, 2, 10, 4)
+        )
+
+        r = self.client.sell_percent(
+            "002537.XSHE", 10, 1, order_time=datetime.datetime(2022, 3, 2, 10, 4)
+        )
+
+        tx = r[0]
+        self.assertEqual(tx["security"], "002537.XSHE")
+        self.assertEqual(tx["filled"], 300)
+        self.assertAlmostEqual(tx["price"], 10.45, 2)
+        self.assertEqual("2022-03-02T10:04:00", tx["time"])
+
     def test_metrics(self):
         # this also test bills
         hljh = "002537.XSHE"

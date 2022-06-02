@@ -290,9 +290,13 @@ def backtest_trade():
 
     code = "000001.XSHE"
 
-    buy = client.buy(code, 16, 100, order_time="2022-05-20 09:31:00")
+    buy = client.buy(code, 16, 200, order_time="2022-05-20 09:31:00")
     print(buy)
 
+    sell = client.sell_percent(
+        code, 10.1, 0.5, order_time=datetime.datetime(2022, 5, 23, 14, 57)
+    )
+    print(sell)
     sell = client.sell(code, 10.1, 1000, order_time="2022-05-23 14:57:00")
     print(sell)
 

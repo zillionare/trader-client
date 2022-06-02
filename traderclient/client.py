@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import arrow
 import numpy as np
@@ -263,7 +263,13 @@ class TraderClient:
         return post_json(url, headers=self.headers)
 
     def buy(
-        self, security: str, price: float, volume: int, timeout: float = 0.5, **kwargs
+        self,
+        security: str,
+        price: float,
+        volume: int,
+        timeout: float = 0.5,
+        order_time: Union[str, datetime.datetime] = None,
+        **kwargs,
     ) -> Dict:
         """证券买入
 
@@ -277,8 +283,6 @@ class TraderClient:
             price (float): 买入价格（限价）。在回测时，如果price指定为None，将转换为市价买入
             volume (int): 买入股票数
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
-
-        Keyword Args:
             order_time Union[str, datetime.datetime]: 下单时间。在回测模式下使用。
 
         Returns:
@@ -334,8 +338,7 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            assert "order_time" in kwargs, "order_time is required in backtest mode"
-            order_time = kwargs["order_time"]
+            assert order_time is not None, "order_time is required in backtest mode"
             if isinstance(order_time, datetime.datetime):
                 order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
             parameters["order_time"] = order_time
@@ -355,6 +358,7 @@ class TraderClient:
         order_type: OrderType = OrderType.MARKET,
         limit_price: float = None,
         timeout: float = 0.5,
+        order_time: Union[str, datetime.datetime] = None,
         **kwargs,
     ) -> Dict:
         """市价买入股票
@@ -372,7 +376,6 @@ class TraderClient:
             order_type (OrderType, optional): 市价买入类型，缺省为五档成交剩撤.
             limit_price (float, optional): 剩余转限价的模式下，设置的限价
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
-        Keyword Args:
             order_time Union[str, datetime.datetime]: 下单时间。在回测模式下使用。
 
         Returns:
@@ -395,8 +398,7 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            assert "order_time" in kwargs, "order_time is required in backtest mode"
-            order_time = kwargs["order_time"]
+            assert order_time is not None, "order_time is required in backtest mode"
             if isinstance(order_time, datetime.datetime):
                 order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
             parameters["order_time"] = order_time
@@ -410,8 +412,14 @@ class TraderClient:
         return r
 
     def sell(
-        self, security: str, price: float, volume: int, timeout: float = 0.5, **kwargs
-    ) -> Dict:
+        self,
+        security: str,
+        price: float,
+        volume: int,
+        timeout: float = 0.5,
+        order_time: Union[str, datetime.datetime] = None,
+        **kwargs,
+    ) -> Union[List, Dict]:
         """以限价方式卖出股票
 
         Notes:
@@ -422,12 +430,10 @@ class TraderClient:
             price (float): 买入价格（限价）。在回测中如果指定为None,将转换为市价卖出
             volume (int): 买入股票数
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
-
-        Keyword Args:
             order_time Union[str, datetime.datetime]: 下单时间。在回测模式下使用。
 
         Returns:
-            Dict or List: 成交返回，详见`buy`方法
+            Union[List, Dict]: 成交返回，详见`buy`方法
         """
         # todo: check return type?
         url = self._cmd_url("sell")
@@ -440,8 +446,7 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            assert "order_time" in kwargs, "order_time is required in backtest mode"
-            order_time = kwargs["order_time"]
+            assert order_time is not None, "order_time is required in backtest mode"
             if isinstance(order_time, datetime.datetime):
                 order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
             parameters["order_time"] = order_time
@@ -463,8 +468,9 @@ class TraderClient:
         order_type: OrderType = OrderType.MARKET,
         limit_price: float = None,
         timeout: float = 0.5,
+        order_time: Union[str, datetime.datetime] = None,
         **kwargs,
-    ) -> Dict:
+    ) -> Union[List, Dict]:
         """市价卖出股票
 
         Notes:
@@ -480,10 +486,9 @@ class TraderClient:
             order_type (OrderType, optional): 市价卖出类型，缺省为五档成交剩撤.
             limit_price (float, optional): 剩余转限价的模式下，设置的限价
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
-        Keyword Args:
             order_time Union[str, datetime.datetime]: 下单时间。在回测模式下使用。
         Returns:
-            Dict: 成交返回，详见`buy`方法
+            Union[List, Dict]: 成交返回，详见`buy`方法
         """
         # todo: check return type?
         url = self._cmd_url("market_sell")
@@ -498,8 +503,7 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            assert "order_time" in kwargs, "order_time is required in backtest mode"
-            order_time = kwargs["order_time"]
+            assert order_time is not None, "order_time is required in backtest mode"
             if isinstance(order_time, datetime.datetime):
                 order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
             parameters["order_time"] = order_time
@@ -512,8 +516,14 @@ class TraderClient:
         return r
 
     def sell_percent(
-        self, security: str, price: float, percent: float, timeout: int = 0.5
-    ) -> Dict:
+        self,
+        security: str,
+        price: float,
+        percent: float,
+        timeout: int = 0.5,
+        order_time: Union[str, datetime.datetime] = None,
+        **kwargs,
+    ) -> Union[List, Dict]:
         """按比例卖出特定的股票（基于可卖股票数），比例的数字由调用者提供
 
         Notes:
@@ -524,9 +534,10 @@ class TraderClient:
             price (float): 市价卖出，价格参数可为0
             percent (float): 调用者给出的百分比，(0, 1]
             time_out (int, optional): 缺省超时为0.5秒
+            order_time: 下单时间。在回测模式下使用。
 
         Returns:
-            Dict: 股票卖出委托单的详细信息，于sell指令相同
+            Union[List, Dict]: 股票卖出委托单的详细信息，于sell指令相同
         """
         if percent <= 0 or percent > 1:
             return None
@@ -534,7 +545,18 @@ class TraderClient:
             return None
 
         url = self._cmd_url("sell_percent")
-        parameters = {"security": security, "price": price, "timeout": timeout}
+        parameters = {
+            "security": security,
+            "price": price,
+            "timeout": timeout,
+            "percent": percent,
+        }
+
+        if self._is_backtest:
+            assert order_time is not None, "order_time is required in backtest mode"
+            if isinstance(order_time, datetime.datetime):
+                order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
+            parameters["order_time"] = order_time
 
         r = post_json(url, params=parameters, headers=self.headers)
         for key in ("time", "created_at", "recv_at"):
