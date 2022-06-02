@@ -10,8 +10,6 @@ from traderclient.transport import delete, get, post_json
 
 logger = logging.getLogger(__name__)
 
-# todo: response以二进制方式传递给客户端，通过pickle序列化
-
 
 class TraderClient:
     """大富翁实盘和回测的客户端。
@@ -42,7 +40,6 @@ class TraderClient:
             start: datetime.date 回测开始日期，必选
             end: datetime.date 回测结束日期，必选
         """
-        # todo: capital is renamed to principal
         self._url = url.rstrip("/")
         self._token = token
         self._account = acct
@@ -116,10 +113,6 @@ class TraderClient:
             - positions: 当前持仓，dtype为[position_dtype](https://zillionare.github.io/backtesting/0.3.2/api/trade/#backtest.trade.datatypes.position_dtype)的numpy structured array
 
         """
-        # todo: added pnl, ppnl. available, market_value
-        # todo: removed trades
-        # todo: rename capital to principal
-        # todo: server should use r.raw to return pickled object
         url = self._cmd_url("info")
         return get(url, headers=self.headers)
 
@@ -136,9 +129,6 @@ class TraderClient:
             - ppnl: 盈亏(百分比)，即pnl/principal
 
         """
-        # todo: removed account
-        # todo: removed /balance from server routing, using info instead
-        # todo: total has been renamed to assets
         url = self._cmd_url("info")
         r = get(url, headers=self.headers)
 
@@ -186,12 +176,10 @@ class TraderClient:
             在回测模式下，持仓信息不包含alias字段
 
         Args:
-            dt: 指定日期，默认为None，表示取当前日期（最新）的持仓信息
+            dt: 指定日期，默认为None，表示取当前日期（最新）的持仓信息，trade server暂不支持此参数
         Returns:
             np.ndarray: dtype为[position_dtype](https://zillionare.github.io/backtesting/0.3.2/api/trade/#backtest.trade.datatypes.position_dtype)的numpy structured array
         """
-        # todo: 返回类型更改为np.ndarray，字段增加alias
-        # todo: 服务器应该使用r.raw来返回pickle对象
         url = self._cmd_url("positions")
 
         r = get(url, params={"date": dt}, headers=self.headers)
@@ -209,7 +197,6 @@ class TraderClient:
         Returns:
             int: 指定股票今日可卖数量，无可卖即为0
         """
-        # todo: remove available_shares from server routing
         url = self._cmd_url("positions")
 
         r = get(url, headers=self.headers)
@@ -244,20 +231,18 @@ class TraderClient:
         Returns:
             Dict: 被取消的委托的信息，参考`buy`的结果
         """
-        # todo: return type?
         url = self._cmd_url("cancel_entrust")
 
         data = {"cid": cid}
         return post_json(url, params=data, headers=self.headers)
 
-    def cancel_all_entrusts(self) -> Dict:
+    def cancel_all_entrusts(self) -> List:
         """撤销当前所有未完成的委托，包括部分成交，不同交易系统实现不同
 
         此API在回测模式下不可用。
         Returns:
-            Dict: 被撤的委托单信息，同buy
+            List: 所有被撤的委托单信息，每个委托单的信息同buy
         """
-        # todo: check return type?
         url = self._cmd_url("cancel_all_entrusts")
 
         return post_json(url, headers=self.headers)
@@ -290,15 +275,14 @@ class TraderClient:
                 实盘返回以下字段：
 
                 {
-                    "request_id" : "uuid",    # 委托在z trader system中的惟一ID
                     "cid" : "xxx-xxxx-xxx",    # 券商给出的合同编号，内部名为entrust_no
                     "security": "000001.XSHE",
+                    "name": "平安银行",
                     "price": 5.10,                  # 委托价格
                     "volume": 1000,                 # 委托量
                     "order_side": 1,                # 成交方向，1买，-1卖
                     "order_type": 1,                # 成交方向，1限价，2市价
                     "status": 3,                    # 执行状态，1已报，2部分成交，3成交，4已撤
-                    "eid": "xx-xxx-xx",            # 委托回报(成交后）id，券商给出
                     "filled": 500,                 # 已成交量
                     "filled_vwap": 5.12,        # 已成交均价，不包括税费
                     "filled_value": 2560,        # 成交额，不包括税费
@@ -322,7 +306,6 @@ class TraderClient:
                 }
 
         """
-        # todo: check return type?
         if volume != volume // 100 * 100:
             volume = volume // 100 * 100
             logger.warning("买入数量必须是100的倍数, 已取整到%d", volume)
@@ -381,7 +364,6 @@ class TraderClient:
         Returns:
             Dict: 成交返回，详见`buy`方法
         """
-        # todo: check return type?
         if volume != volume // 100 * 100:
             volume = volume // 100 * 100
             logger.warning("买入数量必须是100的倍数, 已取整到%d", volume)
@@ -433,7 +415,7 @@ class TraderClient:
             order_time Union[str, datetime.datetime]: 下单时间。在回测模式下使用。
 
         Returns:
-            Union[List, Dict]: 成交返回，详见`buy`方法
+            Union[List, Dict]: 成交返回，详见`buy`方法，trade server只返回一个委托单信息
         """
         # todo: check return type?
         url = self._cmd_url("sell")
@@ -488,9 +470,8 @@ class TraderClient:
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
             order_time Union[str, datetime.datetime]: 下单时间。在回测模式下使用。
         Returns:
-            Union[List, Dict]: 成交返回，详见`buy`方法
+            Union[List, Dict]: 成交返回，详见`buy`方法，trade server只返回一个委托单信息
         """
-        # todo: check return type?
         url = self._cmd_url("market_sell")
         parameters = {
             "security": security,
