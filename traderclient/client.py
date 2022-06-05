@@ -642,7 +642,7 @@ class TraderClient:
             end: 结束日期
 
         Returns:
-            np.ndarray: 账户在[start, end]时间段内的资产信息，是一个dtype为[rich_assets_dtype](https://zillionare.github.io/backtesting/latest/api/trade/#backtest.trade.datatypes.rich_assets_dtype)的numpy structured array
+            np.ndarray: 账户在[start, end]时间段内的资产信息，是一个dtype为[rich_assets_dtype](https://zillionare.github.io/backtesting/0.4.0/api/trade/#backtest.trade.datatypes.rich_assets_dtype)的numpy structured array
         """
         url = self._cmd_url("assets")
         return get(url, headers=self.headers, params={"start": start, "end": end})
