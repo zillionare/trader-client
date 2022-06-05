@@ -302,6 +302,7 @@ def backtest_trade():
 
     print(client.metrics())
     print(client.bills())
+    print(client.get_assets())
 
 
 if __name__ == "__main__":

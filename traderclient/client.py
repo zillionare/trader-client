@@ -647,6 +647,25 @@ class TraderClient:
         url = self._cmd_url("bills")
         return get(url, headers=self.headers)
 
+    def get_assets(
+        self,
+        start: Union[str, datetime.date] = None,
+        end: Union[str, datetime.date] = None,
+    ) -> np.ndarray:
+        """获取账户在[start, end]时间段内的资产信息。
+
+        此数据可用以资产曲线的绘制。
+
+        Args:
+            start: 起始日期
+            end: 结束日期
+
+        Returns:
+            np.ndarray: 账户在[start, end]时间段内的资产信息，是一个dtype为[rich_assets_dtype](https://zillionare.github.io/backtesting/latest/api/trade/#backtest.trade.datatypes.rich_assets_dtype)的numpy structured array
+        """
+        url = self._cmd_url("assets")
+        return get(url, headers=self.headers, params={"start": start, "end": end})
+
     @staticmethod
     def list_accounts(url_prefix: str, admin_token: str) -> List:
         """列举服务器上所有账户（不包含管理员账户）
@@ -660,6 +679,7 @@ class TraderClient:
         Returns:
             账户列表，每个元素信息即`info`返回的信息
         """
+        url_prefix = url_prefix.rstrip("/")
         url = f"{url_prefix}/accounts"
         headers = {"Authorization": admin_token}
         return get(url, headers=headers)
@@ -680,6 +700,7 @@ class TraderClient:
         Returns:
             服务器上剩余账户个数
         """
+        url_prefix = url_prefix.rstrip("/")
         url = f"{url_prefix}/accounts"
         headers = {"Authorization": token}
         return delete(url, headers=headers, params={"name": account_name})

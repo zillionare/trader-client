@@ -148,7 +148,7 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
         self.assertEqual("2022-03-02T10:04:00", tx["time"])
 
     def test_metrics(self):
-        # this also test bills
+        # this also test bills, get_assets
         hljh = "002537.XSHE"
 
         for price, volume, tm in [
@@ -203,4 +203,13 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
         assert_deep_almost_equal(self, exp, actual, places=2)
 
         bills = self.client.bills()
-        print(bills)
+        # print(bills)
+
+        start = datetime.date(2022, 3, 4)
+        end = datetime.date(2022, 3, 10)
+        assets = self.client.get_assets(start, end)
+        print(assets)
+
+        assets = self.client.get_assets()
+        self.assertEqual(assets[0]["date"], datetime.date(2022, 3, 1))
+        self.assertEqual(assets[-1]["date"], datetime.date(2022, 3, 14))
