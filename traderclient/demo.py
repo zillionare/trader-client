@@ -24,7 +24,7 @@ def init_logging(level=logging.INFO):
 def test_info():
     url = "http://192.168.100.133:8000/api/trade/v0.1"
     acct = "henry"
-    token = "b0dd8e56-2b5c-49fa-826d-08a9d0014fe0"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
     client = TraderClient(url, acct, token)
 
     print("\n------------- info --------------")
@@ -69,7 +69,7 @@ def test_info_with_error():
 def test_position():
     url = "http://192.168.100.133:8000/api/trade/v0.1"
     acct = "henry"
-    token = "b0dd8e56-2b5c-49fa-826d-08a9d0014fe0"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
     client = TraderClient(url, acct, token)
 
     print("\n------------- positions --------------")
@@ -88,7 +88,7 @@ def test_position():
 def test_entrusts():
     url = "http://192.168.100.133:8000/api/trade/v0.1"
     acct = "henry"
-    token = "b0dd8e56-2b5c-49fa-826d-08a9d0014fe0"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
 
     # initialize client instance
     client = TraderClient(url, acct, token)
@@ -104,48 +104,65 @@ def test_entrusts():
 def test_trade_cancel():
     url = "http://192.168.100.133:8000/api/trade/v0.1"
     acct = "henry"
-    token = "b0dd8e56-2b5c-49fa-826d-08a9d0014fe0"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
 
     # initialize client instance
     client = TraderClient(url, acct, token)
 
     print("\n------------- cancel_entrust --------------")
-    result = client.cancel_entrust("20f48ea9-cd92-4dad-86f0-4e8e925e8496")
+    result = client.cancel_entrust("50f5aaee-6fa8-470c-a630-39b43bc9dda7")
     if result is None:
         return None
-
     print(result)
+
+def test_trade_cancel_all():
+    url = "http://192.168.100.133:8000/api/trade/v0.1"
+    acct = "henry"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
+
+    # initialize client instance
+    client = TraderClient(url, acct, token)
 
     print("\n------------- cancel_all_entrust --------------")
     result = client.cancel_all_entrusts()
     print(result)
 
-
 def test_trade_buy():
     url = "http://192.168.100.133:8000/api/trade/v0.1"
     acct = "henry"
-    token = "b0dd8e56-2b5c-49fa-826d-08a9d0014fe0"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
 
     # initialize client instance
     client = TraderClient(url, acct, token)
 
     # test buy
     print("\n------------- buy --------------")
-    result = client.buy(security="002537.XSHE", price=7.9, volume=200)
+    result = client.buy(security="002537.XSHE", price=8.45, volume=200)
     if result is None:
         return None
-
     print(result)
+    # buy for cancel
+    result = client.buy(security="002537.XSHE", price=6.97, volume=600)
+    if result is None:
+        return None
+    print(result)
+
+def test_trade_market_buy():
+    url = "http://192.168.100.133:8000/api/trade/v0.1"
+    acct = "henry"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
+
+    # initialize client instance
+    client = TraderClient(url, acct, token)
 
     print("\n------------- market_buy --------------")
     rsp = client.market_buy(security="002537.XSHE", price=7.8, volume=500)
     print(rsp)
 
-
 def test_trade_sell():
     url = "http://192.168.100.133:8000/api/trade/v0.1"
     acct = "henry"
-    token = "b0dd8e56-2b5c-49fa-826d-08a9d0014fe0"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
 
     # initialize client instance
     client = TraderClient(url, acct, token)
@@ -155,14 +172,14 @@ def test_trade_sell():
     print(rsp)
 
     print("\n------------- market_sell ---------------")
-    rsp = client.market_sell(security="002537.XSHE", price=9.9, volume=200)
+    rsp = client.market_sell(security="002537.XSHE", price=9.7, volume=400)
     print(rsp)
 
 
 def test_sell_percent():
     url = "http://192.168.100.19:9000/backtest/api/trade/v0.1"
-    acct = "仿真_张三_策略1"
-    token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
+    acct = "henry"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
 
     # initialize client instance
     client = TraderClient(url, acct, token)
@@ -178,8 +195,8 @@ def test_sell_percent():
 
 def test_sell_all():
     url = "http://192.168.100.19:9000/backtest/api/trade/v0.1"
-    acct = "仿真_张三_策略1"
-    token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
+    acct = "henry"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
 
     # initialize client instance
     client = TraderClient(url, acct, token)
@@ -195,8 +212,8 @@ def test_sell_all():
 
 def test_get_data_in_range():
     url = "http://192.168.100.19:9000/backtest/api/trade/v0.1"
-    acct = "仿真_张三_策略1"
-    token = "ec31c154fc0cbf4ba39eb48689ebcbfaacf8067f"
+    acct = "henry"
+    token = "29b7cce7-e9bb-4510-9231-6d492750b4db"
 
     # initialize client instance
     client = TraderClient(url, acct, token)
@@ -221,6 +238,8 @@ def test_get_data_in_range():
 
     print(result)
 
+def trade_test_entry():
+    test_trade_market_buy()
 
 # the following fits backtesting server only
 
@@ -256,4 +275,5 @@ def backtest_trade():
 
 
 if __name__ == "__main__":
-    backtest_trade()
+    #backtest_trade()
+    trade_test_entry()
