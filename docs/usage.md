@@ -50,10 +50,15 @@ print(r)
 
 !!!Tips
     如何获取回测服务器的地址？您可以在浏览器地址栏中输入http://server:port/，这样将会返回如下提示：
+
+    ```json
+    {
+        "greetings":"欢迎使用大富翁回测系统",
+        "version":"0.4.1",
+        "endpoint":"/backtest/api/trade/v0.4"
+    }
     ```
-    Welcome to zillionare bactest server. The endpoints is /backtest/api/trade/v0.3
-    ```
-    因此trader client初始化时，地址应该设置为http://server:port/backtest/api/trade/v0.3
+    因此trader client初始化时，地址应该设置为http://server:port/backtest/api/trade/v0.4
 
 ## 交易
 
@@ -69,3 +74,8 @@ print(r)
 ## 策略评估
 
 [metrics][traderclient.client.TraderClient.metrics]方法将返回策略的各项指标，比如sharpe, sortino, calmar, win rate, max drawdown等。您还可以传入一个参考标的，backtest将对参考标的也同样计算上述指标。
+
+在进行策略评估之前，推荐调用[stop_backtest][traderclient.client.TraderClient.stop_backtest]方法冻结回测结果。这样可能在后续的多次调用`metrics`时，获得更好的结果。
+
+## 超时设置
+从0.3.9起，Trader Client支持设置访问服务器的超时时间。您可以通过环境变量[TRADER_CLIENT_TIMEOUT]来设置这个超时。如果未经设置，则默认使用30秒超时，但有一个例外，即如果部分API中设置了timeout时间，且这个时间大于30秒，那么将使用API调用时设置的timeout设置。

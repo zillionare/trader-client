@@ -19,3 +19,8 @@
 
 ## 0.3.8 (2022-06-05)
 * add get_assets, which is needed when plot equity curve
+
+## 0.3.9 (2022-06-06)
+* add timeout when trader client talk to server.
+* add stop_backtest API
+* this version will match zillionare-backtest >= 0.4.1. When it's talk to that version, order_time must be strictly ordered in ascending order (in seconds or even less granularity).

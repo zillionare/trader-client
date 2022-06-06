@@ -1,14 +1,5 @@
 # 大富翁交易客户端
 
-
-<p align="center">
-<a href="https://pypi.python.org/pypi/zillionare-trader-client">
-    <img src="https://img.shields.io/pypi/v/zillionare-trader-client.svg"
-        alt = "Release Status">
-</a>
-
-</p>
-
 trade-client是大富翁量化框架中用来交易的客户端。它对回测和实盘提供了几乎相同的接口，从而使得经过回测的策略，可以无缝切换到实盘环境中。
 
 ## 功能
@@ -25,19 +16,14 @@ trade-client是大富翁量化框架中用来交易的客户端。它对回测�
     ```
     client.buy(..., order_time=datetime.datetime(2022, 3, 1, 9, 31))
     client.buy(..., order_time=datetime.datetime(2022, 3, 4, 14, 31))
+    client.buy(..., order_time=datetime.datetime(2022, 3, 4, 14, 32))
     client.sell(..., order_time=datetime.datetime(2022, 3, 7, 9, 31))
     ```
     是正确的执行顺序，但下面的执行顺序必然产生错误的结果(实际上服务器也会进行检测并报错误)
     ```
-    client.buy(..., order_time=datetime.datetime(2022, 3, 4, 14, 31))
+    client.buy(..., order_time=datetime.datetime(2022, 3, 1, 14, 31))
     client.buy(..., order_time=datetime.datetime(2022, 3, 1, 9, 31))
     client.sell(..., order_time=datetime.datetime(2022, 3, 7, 9, 31))
-    ```
-
-    但是下面的执行顺序并不会报错：
-    ```
-    client.buy(..., order_time=datetime.datetime(2022, 3, 1, 14, 31))
-    client.sell(..., order_time=datetime.datetime(2022, 3, 1, 9, 31))
     ```
     策略需要自行决定是否允许这样的情况发生，以及如果发生失，会产生什么样的后果。
 

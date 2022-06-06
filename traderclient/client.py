@@ -647,6 +647,17 @@ class TraderClient:
         url = self._cmd_url("assets")
         return get(url, headers=self.headers, params={"start": start, "end": end})
 
+    def stop_backtest(self):
+        """停止回测。
+
+        此API仅在回测模式下可用。其作用是冻结回测账户，并计算回测的各项指标。在未调用本API前，调用`metrics`也能同样获取到回测的各项指标，但如果需要多次调用`metrics`，则账户在冻结之后，由于指标不再需要更新，因而速度会更快。
+
+        另外，在[zillionare-backtest](https://zillionare.github.io/backtesting/)的未来版本中,将可能使用本方法来实现回测数据的持久化保存，因此，建议您从现在起就确保在回测后调用本方法。
+
+        """
+        url = self._cmd_url("stop_backtest")
+        return post_json(url, headers=self.headers)
+
     @staticmethod
     def list_accounts(url_prefix: str, admin_token: str) -> List:
         """列举服务器上所有账户（不包含管理员账户）
