@@ -159,6 +159,23 @@ def test_trade_market_buy():
     rsp = client.market_buy(security="002537.XSHE", price=7.8, volume=500)
     print(rsp)
 
+def test_for_nginx():
+    url = "http://203.189.206.225:9100/api/trade/v0.1"
+    acct = "guobotest"
+    token = "b1733675-f525-49e9-82c4-a91360ec36e6"
+
+    # initialize client instance
+    client = TraderClient(url, acct, token)
+
+    try:
+        result = client.info()
+        if result is None:
+            logger.error("failed to get information")
+        print(result)
+    except Exception as e:
+        print(e)
+
+
 def test_trade_sell():
     url = "http://192.168.100.133:8000/api/trade/v0.1"
     acct = "henry"
@@ -276,4 +293,4 @@ def backtest_trade():
 
 if __name__ == "__main__":
     #backtest_trade()
-    trade_test_entry()
+    test_for_nginx()
