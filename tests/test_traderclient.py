@@ -17,7 +17,7 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
     def setUp(self):
         enable_logging("info")
 
-        self.url = "http://localhost:3180/backtest/api/trade/v0.3"
+        self.url = "http://localhost:3180/backtest/api/trade/v0.4"
         start = datetime.date(2022, 3, 1)
         end = datetime.date(2022, 3, 14)
         try:
@@ -160,7 +160,7 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
             (9.57, 500, "2022-03-08 09:31:00"),
             (9.08, 500, "2022-03-09 09:31:00"),
             (9.1, 500, "2022-03-10 09:31:00"),
-            (9.65, 500, "2022-03-11 09:31:00"),  # this deal won't close
+            (9.68, 500, "2022-03-11 09:31:00"),
             (9.65, 500, "2022-03-14 09:31:00"),
         ]:
             try:
@@ -177,17 +177,17 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
             "start": datetime.date(2022, 3, 1),
             "end": datetime.date(2022, 3, 14),
             "window": 10,
-            "total_tx": 8,
-            "total_profit": -343.13999999978114,
-            "total_profit_rate": -0.0003431399999997811,
-            "win_rate": 0.625,
-            "mean_return": -2.9972019661695835e-05,
-            "sharpe": -1.439194474227825,
-            "sortino": -2.1212244527176227,
-            "calmar": -1.8723514035186801,
+            "total_tx": 9,
+            "total_profit": -404.0999999998603,
+            "total_profit_rate": -0.0004040999999998603,
+            "win_rate": 0.5555555555555556,
+            "mean_return": -3.896698729980441e-05,
+            "sharpe": -1.396890251070207,
+            "sortino": -2.0486727998320817,
+            "calmar": -2.422741706100782,
             "max_drawdown": -0.0041827334569883405,
-            "annual_return": -0.00783154685873666,
-            "volatility": 0.026093033031478072,
+            "annual_return": -0.010133682791748755,
+            "volatility": 0.02850594795764624,
             "baseline": {
                 "code": "002537.XSHE",
                 "win_rate": 0.5555555555555556,
@@ -213,3 +213,6 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
         assets = self.client.get_assets()
         self.assertEqual(assets[0]["date"], datetime.date(2022, 3, 1))
         self.assertEqual(assets[-1]["date"], datetime.date(2022, 3, 14))
+
+    def test_stop_backtest(self):
+        self.client.stop_backtest()

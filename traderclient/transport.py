@@ -1,4 +1,5 @@
 import logging
+import os
 import pickle
 import uuid
 from typing import Any, Dict
@@ -10,6 +11,26 @@ from traderclient.utils import get_cmd, status_ok
 from .errors import TradeError
 
 logger = logging.getLogger(__name__)
+
+
+def timeout(params: dict = None) -> int:
+    """determine timeout value for httpx request
+
+    if there's envar "TRADER_CLIENT_TIMEOUT", it will precedes, then the max of user timeout and default 30
+
+    Args:
+        params : user specified in request
+
+    Returns:
+        timeout
+    """
+    if os.environ.get("TRADER_CLIENT_TIMEOUT"):
+        return int(os.environ.get("TRADER_CLIENT_TIMEOUT"))
+
+    if params is None or params.get("timeout") is None:
+        return 30
+
+    return max(params.get("timeout"), 30)
 
 
 def process_response_result(rsp: httpx.Response, cmd: str = None) -> Any:
@@ -58,7 +79,8 @@ def get(url, params=None, headers=None) -> Any:
     else:
         headers.update({"Request-ID": uuid.uuid4().hex})
 
-    rsp = httpx.get(url, params=params, headers=headers)
+    rsp = httpx.get(url, params=params, headers=headers, timeout=timeout(params))
+
     action = get_cmd(url)
     result = process_response_result(rsp, action)
 
@@ -79,7 +101,7 @@ def post_json(url, params=None, headers=None) -> Any:
     else:
         headers.update({"Request-ID": uuid.uuid4().hex})
 
-    rsp = httpx.post(url, json=params, headers=headers)
+    rsp = httpx.post(url, json=params, headers=headers, timeout=timeout(params))
 
     action = get_cmd(url)
     result = process_response_result(rsp, action)
@@ -102,7 +124,8 @@ def delete(url, params=None, headers=None) -> Any:
     else:
         headers.update({"Request-ID": uuid.uuid4().hex})
 
-    rsp = httpx.delete(url, params=params, headers=headers)
+    rsp = httpx.delete(url, params=params, headers=headers, timeout=timeout(params))
+
     action = get_cmd(url)
     result = process_response_result(rsp, action)
 

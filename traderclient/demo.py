@@ -115,6 +115,7 @@ def test_trade_cancel():
         return None
     print(result)
 
+
 def test_trade_cancel_all():
     url = "http://192.168.100.133:8000/api/trade/v0.1"
     acct = "henry"
@@ -126,6 +127,7 @@ def test_trade_cancel_all():
     print("\n------------- cancel_all_entrust --------------")
     result = client.cancel_all_entrusts()
     print(result)
+
 
 def test_trade_buy():
     url = "http://192.168.100.133:8000/api/trade/v0.1"
@@ -146,6 +148,7 @@ def test_trade_buy():
     if result is None:
         return None
     print(result)
+
 
 def test_trade_market_buy():
     url = "http://192.168.100.133:8000/api/trade/v0.1"
@@ -255,8 +258,10 @@ def test_get_data_in_range():
 
     print(result)
 
+
 def trade_test_entry():
     test_trade_market_buy()
+
 
 # the following fits backtesting server only
 
@@ -264,26 +269,27 @@ def trade_test_entry():
 def backtest_trade():
     import uuid
 
-    url = "http://192.168.100.114:7080/backtest/api/trade/v0.3/"
+    # url = "http://192.168.100.114:7080/backtest/api/trade/v0.4/"
+    url = "http://192.168.100.112:3180/backtest/api/trade/v0.3"
 
     token = uuid.uuid4().hex
     account = f"my-great-strategy-v1-{token[-4:]}"
-    start = datetime.date(2022, 5, 18)
-    end = datetime.date(2022, 5, 25)
+    start = datetime.date(2022, 3, 1)
+    end = datetime.date(2022, 3, 14)
     client: TraderClient = TraderClient(
         url, account, token, is_backtest=True, start=start, end=end
     )
 
-    code = "000001.XSHE"
+    code = "002537.XSHE"
 
-    buy = client.buy(code, 16, 200, order_time="2022-05-20 09:31:00")
+    buy = client.buy(code, 16, 200, order_time="2022-03-01 09:31:00")
     print(buy)
 
     sell = client.sell_percent(
-        code, 10.1, 0.5, order_time=datetime.datetime(2022, 5, 23, 14, 57)
+        code, 9, 0.5, order_time=datetime.datetime(2022, 3, 4, 14, 57)
     )
     print(sell)
-    sell = client.sell(code, 10.1, 1000, order_time="2022-05-23 14:57:00")
+    sell = client.sell(code, 9, 1000, order_time="2022-03-07 14:57:00")
     print(sell)
 
     print(client.metrics())
