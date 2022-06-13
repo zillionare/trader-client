@@ -247,40 +247,5 @@ def trade_test_entry():
     test_trade_market_buy()
 
 
-# the following fits backtesting server only
-
-
-def backtest_trade():
-    import uuid
-
-    # url = "http://192.168.100.114:7080/backtest/api/trade/v0.4/"
-    url = "http://192.168.100.112:3180/backtest/api/trade/v0.3"
-
-    token = uuid.uuid4().hex
-    account = f"my-great-strategy-v1-{token[-4:]}"
-    start = datetime.date(2022, 3, 1)
-    end = datetime.date(2022, 3, 14)
-    client: TraderClient = TraderClient(
-        url, account, token, is_backtest=True, start=start, end=end
-    )
-
-    code = "002537.XSHE"
-
-    buy = client.buy(code, 16, 200, order_time="2022-03-01 09:31:00")
-    print(buy)
-
-    sell = client.sell_percent(
-        code, 9, 0.5, order_time=datetime.datetime(2022, 3, 4, 14, 57)
-    )
-    print(sell)
-    sell = client.sell(code, 9, 1000, order_time="2022-03-07 14:57:00")
-    print(sell)
-
-    print(client.metrics())
-    print(client.bills())
-    print(client.get_assets())
-
-
 if __name__ == "__main__":
-    backtest_trade()
-    # trade_test_entry()
+    trade_test_entry()
