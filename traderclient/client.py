@@ -438,8 +438,9 @@ class TraderClient:
             if key in r:
                 r[key] = arrow.get(r[key]).naive
 
-        for rec in r:
-            rec["time"] = arrow.get(rec["time"]).naive
+        if self._is_backtest:
+            for rec in r:
+                rec["time"] = arrow.get(rec["time"]).naive
 
         return r
 

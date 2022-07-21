@@ -24,3 +24,6 @@
 * add timeout when trader client talk to server.
 * add stop_backtest API
 * this version will match zillionare-backtest >= 0.4.1. When it's talk to that version, order_time must be strictly ordered in ascending order (in seconds or even less granularity).
+
+## 0.3.10 (2022-07-21)
+* fixed #7
