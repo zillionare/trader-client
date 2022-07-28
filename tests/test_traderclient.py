@@ -5,6 +5,7 @@
 import datetime
 import unittest
 
+import httpx
 import numpy as np
 
 from tests import assert_deep_almost_equal
@@ -12,12 +13,15 @@ from traderclient.client import TraderClient
 from traderclient.errors import TradeError
 from traderclient.utils import enable_logging
 
+rsp = httpx.get("http://localhost:3180/")
+endpoint = rsp.json()["endpoint"]
+url = f"http://localhost:3180{endpoint}/"
+
 
 class TraderClientWithBacktestServerTest(unittest.TestCase):
     def setUp(self):
         enable_logging("info")
 
-        self.url = "http://localhost:3180/backtest/api/trade/v0.4"
         start = datetime.date(2022, 3, 1)
         end = datetime.date(2022, 3, 14)
         try:
@@ -27,7 +31,7 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
 
         # this also tested _start_backtest
         self.client = TraderClient(
-            self.url, "test", "test", is_backtest=True, start=start, end=end
+            url, "test", "test", is_backtest=True, start=start, end=end
         )
 
     def tearDown(self) -> None:
