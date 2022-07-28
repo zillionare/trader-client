@@ -15,15 +15,7 @@
 
 # 测试环境
 
-zillionare-backtest为开发提供了一个基于容器的测试环境，在tox.ini中定义：
-```
-commands =
-    /usr/bin/sh ./stop_service.sh
-    /usr/bin/sh ./start_service.sh
-    pytest -s --cov=traderclient --cov-append --cov-report=xml --cov-report term-missing tests
-```
-
-在start_service.sh中，创建了一个tox-bt-net，并且将redis, influxdb和backtest服务器连接在这个网络上。最终，您只需要将`url`指向backtest服务器提供的地址即可：
+zillionare-backtest为开发提供了一个基于容器的测试环境:
 
 ```
 echo "初始化redis容器"
@@ -44,3 +36,12 @@ docker network connect --alias bt tox-bt-net tox-bt
 ```
 
 更多详细信息，请参考[backtest-server]()
+
+测试过程完全自动化，可以通过`tox`命令来运行。tox.ini中是这样定义的：
+```
+commands =
+    /usr/bin/sh ./stop_service.sh
+    /usr/bin/sh ./start_service.sh
+    pytest -s --cov=traderclient --cov-append --cov-report=xml --cov-report term-missing tests
+```
+测试用例会自动寻找backtesting服务器地址并进行测试。
