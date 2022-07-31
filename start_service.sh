@@ -19,4 +19,4 @@ docker network connect --alias influxdb tox-bt-net tox-influxdb
 docker network connect --alias bt tox-bt-net tox-bt
 
 # wait tox-bt ready
-sleep 5
+sleep 10

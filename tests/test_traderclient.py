@@ -4,6 +4,7 @@
 
 import datetime
 import unittest
+import uuid
 
 import httpx
 import numpy as np
@@ -31,7 +32,12 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
 
         # this also tested _start_backtest
         self.client = TraderClient(
-            url, "test", "test", is_backtest=True, start=start, end=end
+            url,
+            f"test-{uuid.uuid4().hex}",
+            f"{uuid.uuid4().hex}",
+            is_backtest=True,
+            start=start,
+            end=end,
         )
 
     def tearDown(self) -> None:
