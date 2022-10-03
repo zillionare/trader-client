@@ -11,7 +11,8 @@ sleep 5
 sudo docker exec -i tox-influxdb bash -c 'influx setup --username my-user --password my-password --org my-org --bucket my-bucket --token my-token --force'
 
 sleep 1
-docker run -d --name tox-bt -e MODE=TEST -e PORT=3180 -p 3180:3180 backtest
+rm -rf /var/log/backtest/*
+docker run -d --name tox-bt -e MODE=TEST -e PORT=3180 -v /var/log/backtest:/var/log/backtest -v ~/zillionare/backtest/config:/config -p 3180:3180 backtest
 
 docker network create tox-bt-net
 docker network connect --alias redis tox-bt-net tox-redis
