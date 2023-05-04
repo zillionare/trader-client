@@ -6,6 +6,7 @@ import datetime
 import unittest
 import uuid
 
+import arrow
 import httpx
 import numpy as np
 
@@ -53,7 +54,7 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
         self.assertEqual(r["time"], date)
 
         # no excpetion is ok
-        r = self.client.buy("002537.XSHE", 10, 500, order_time=date.isoformat())
+        r = self.client.buy("002537.XSHE", 10, 500, order_time=date)
 
     def test_info(self):
         # this also test available_money, balance
@@ -92,20 +93,20 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
 
     def test_positions(self):
         # this also test available_shares
-        positions = self.client.positions()
+        positions = self.client.positions
         self.assertEqual(0, positions.size)
 
         self.client.buy(
             "002537.XSHE", 10, 500, order_time=datetime.datetime(2022, 3, 1, 10, 4)
         )
 
-        positions = self.client.positions()
+        positions = self.client.positions
         self.assertListEqual(positions["security"].tolist(), ["002537.XSHE"])
         self.assertListEqual(positions["shares"].tolist(), [500])
         self.assertListEqual(positions["sellable"].tolist(), [0])
         np.testing.assert_array_almost_equal(positions["price"], [9.42], decimal=2)
 
-        positions = self.client.positions(datetime.date(2022, 3, 7))
+        positions = self.client.get_positions(datetime.date(2022, 3, 7))
         self.assertListEqual(positions["security"].tolist(), ["002537.XSHE"])
         self.assertListEqual(positions["shares"].tolist(), [500])
         self.assertListEqual(positions["sellable"].tolist(), [500])
@@ -174,7 +175,7 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
             (9.65, 500, "2022-03-14 09:31:00"),
         ]:
             try:
-                self.client.buy(hljh, price, volume, order_time=tm)
+                self.client.buy(hljh, price, volume, order_time=arrow.get(tm).naive)
             except TradeError:
                 pass
 

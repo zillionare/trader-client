@@ -2,6 +2,7 @@ import datetime
 import logging
 from typing import Dict, List, Optional, Union
 
+import arrow
 import numpy as np
 
 from traderclient.datatypes import OrderSide, OrderStatus, OrderType
@@ -380,8 +381,8 @@ class TraderClient:
         if self._is_backtest:
             if order_time is None:
                 raise ValueError("order_time is required in backtest mode")
-            else:
-                _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
+
+            _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
             parameters["order_time"] = _order_time
 
         self._is_dirty = True
@@ -489,9 +490,10 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            raise ValueError("order_time is required in backtest mode")
-            if isinstance(order_time, datetime.datetime):
-                _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
+            if order_time is None:
+                raise ValueError("order_time is required in backtest mode")
+
+            _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
             parameters["order_time"] = _order_time
 
         self._is_dirty = True
@@ -547,7 +549,8 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            raise ValueError("order_time is required in backtest mode")
+            if order_time is None:
+                raise ValueError("order_time is required in backtest mode")
 
             _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
             parameters["order_time"] = _order_time
@@ -642,9 +645,10 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            raise ValueError("order_time is required in backtest mode")
-            if isinstance(order_time, datetime.datetime):
-                _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
+            if order_time is None:
+                raise ValueError("order_time is required in backtest mode")
+
+            _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
             parameters["order_time"] = _order_time
 
         self._is_dirty = True
