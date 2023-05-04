@@ -2,7 +2,7 @@ import logging
 import os
 import pickle
 import uuid
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -13,7 +13,7 @@ from .errors import TradeError
 logger = logging.getLogger(__name__)
 
 
-def timeout(params: dict = None) -> int:
+def timeout(params: Optional[dict] = None) -> int:
     """determine timeout value for httpx request
 
     if there's envar "TRADER_CLIENT_TIMEOUT", it will precedes, then the max of user timeout and default 30
@@ -25,15 +25,15 @@ def timeout(params: dict = None) -> int:
         timeout
     """
     if os.environ.get("TRADER_CLIENT_TIMEOUT"):
-        return int(os.environ.get("TRADER_CLIENT_TIMEOUT"))
+        return int(os.environ.get("TRADER_CLIENT_TIMEOUT", "5"))
 
     if params is None or params.get("timeout") is None:
         return 30
 
-    return max(params.get("timeout"), 30)
+    return max(params.get("timeout", 5), 30)
 
 
-def process_response_result(rsp: httpx.Response, cmd: str = None) -> Any:
+def process_response_result(rsp: httpx.Response, cmd: Optional[str] = None) -> Any:
     """获取响应中的数据，并检查结果合法性
 
     Args:
@@ -65,7 +65,7 @@ def process_response_result(rsp: httpx.Response, cmd: str = None) -> Any:
         rsp.raise_for_status()
 
 
-def get(url, params=None, headers=None) -> Any:
+def get(url, params:Optional[dict]=None, headers=None) -> Any:
     """发送GET请求到上游服务接口
 
     Args:
@@ -109,7 +109,7 @@ def post_json(url, params=None, headers=None) -> Any:
     return result
 
 
-def delete(url, params=None, headers=None) -> Any:
+def delete(url, params: Optional[Dict]=None, headers=None) -> Any:
     """从服务器上删除资源
 
     Args:

@@ -2,7 +2,6 @@ import datetime
 import logging
 from typing import Dict, List, Optional, Union
 
-import arrow
 import numpy as np
 
 from traderclient.datatypes import OrderSide, OrderStatus, OrderType
@@ -16,6 +15,8 @@ class TraderClient:
 
     在使用客户端时，需要先构建客户端实例，再调用其他方法，并处理[traderclient.errors.TradeError][]的异常，可以通过`status_code`和`message`来获取错误信息。如果是回测模式，一般会在回测结束时调用`metrics`方法来查看策略评估结果。如果要进一步查看信息，可以调用`bills`方法来获取历史持仓、交易记录和每日资产数据。
 
+    !!! Warn
+        此类实例既非线程安全，也非异步事件安全。即你不能在多个线程中，或者多个异步队列中使用它。
     """
 
     def __init__(
@@ -49,14 +50,18 @@ class TraderClient:
         self._is_backtest = is_backtest
 
         if is_backtest:
-            principal = kwargs.get("principal", 1_000_000)
+            self._principal = kwargs.get("principal", 1_000_000)
             commission = kwargs.get("commission", 1e-4)
             start = kwargs.get("start")
             end = kwargs.get("end")
             if start is None or end is None:
                 raise ValueError("start and end must be specified in backtest mode")
 
-            self._start_backtest(acct, token, principal, commission, start, end)
+            self._start_backtest(acct, token, self._principal, commission, start, end)
+
+        self._is_dirty = False
+        self._cash = None
+        self._positions = None
 
     def _cmd_url(self, cmd: str) -> str:
         return f"{self._url}/{cmd}"
@@ -114,7 +119,9 @@ class TraderClient:
 
         """
         url = self._cmd_url("info")
-        return get(url, headers=self.headers)
+        r = get(url, headers=self.headers)
+        self._is_dirty = False
+        return r
 
     def balance(self) -> Dict:
         """取该账号对应的账户余额信息
@@ -151,9 +158,12 @@ class TraderClient:
         Returns:
             float: 账户可用资金
         """
-        url = self._cmd_url("info")
-        r = get(url, headers=self.headers)
-        return r.get("available")
+        if self._is_dirty or self._cash is None:
+            url = self._cmd_url("info")
+            r = get(url, headers=self.headers)
+            self._cash = r.get("available")
+
+        return self._cash
 
     @property
     def principal(self) -> float:
@@ -169,7 +179,19 @@ class TraderClient:
         r = get(url, headers=self.headers)
         return r.get("principal")
 
-    def positions(self, dt: datetime.date = None) -> np.ndarray:
+    @property
+    def positions(self):
+        """当前账户最新持仓"""
+        if self._is_dirty or self._positions is None:
+            url = self._cmd_url("positions")
+
+            r = get(url, headers=self.headers)
+
+            self._positions = r
+
+        return self._positions
+
+    def get_positions(self, dt: Optional[datetime.date] = None) -> np.ndarray:
         """取该子账户当前持仓信息
 
         Warning:
@@ -197,17 +219,22 @@ class TraderClient:
         Returns:
             int: 指定股票今日可卖数量，无可卖即为0
         """
-        url = self._cmd_url("positions")
+        if self._is_dirty or self._positions is None:
+            url = self._cmd_url("positions")
 
-        r = get(url, headers=self.headers)
+            r = get(url, headers=self.headers)
 
-        found = r[r["security"] == security]
+            self._positions = r
+            # 此时持仓虽然同步了，但其它数据，比如cash并未同步，所以不能更改_is_dirty状态
+
+        found = self._positions[self._positions["security"] == security]
         if found.size == 1:
             return found["sellable"][0].item()
         elif found.size == 0:
             return 0
         else:
             logger.warning("found more than one position entry in response: %s", found)
+            raise ValueError(f"found more than one position entry in response: {found}")
 
     def today_entrusts(self) -> List:
         """查询账户当日所有委托，包括失败的委托
@@ -234,6 +261,8 @@ class TraderClient:
         url = self._cmd_url("cancel_entrust")
 
         data = {"cid": cid}
+
+        self._is_dirty = True
         return post_json(url, params=data, headers=self.headers)
 
     def cancel_all_entrusts(self) -> List:
@@ -245,7 +274,35 @@ class TraderClient:
         """
         url = self._cmd_url("cancel_all_entrusts")
 
+        self._is_dirty = True
         return post_json(url, headers=self.headers)
+
+    async def buy_by_money(
+        self,
+        security: str,
+        money: float,
+        price: Optional[float] = None,
+        timeout: float = 0.5,
+        order_time: Optional[datetime.datetime] = None,
+        **kwargs,
+    ) -> Dict:
+        """按金额买入股票。
+
+        Returns:
+            参考[buy][traderclient.client.buy]
+        """
+        order_time = order_time or datetime.datetime.now()
+
+        if price is None:
+            price = await self._get_market_buy_price(security, order_time)
+            volume = int(money / price / 100) * 100
+
+            return self.market_buy(
+                security, volume, timeout=timeout, order_time=order_time
+            )
+        else:
+            volume = int(money / price / 100) * 100
+            return self.buy(security, price, volume, timeout, order_time)
 
     def buy(
         self,
@@ -253,7 +310,7 @@ class TraderClient:
         price: float,
         volume: int,
         timeout: float = 0.5,
-        order_time: Union[str, datetime.datetime] = None,
+        order_time: Optional[datetime.datetime] = None,
         **kwargs,
     ) -> Dict:
         """证券买入
@@ -266,9 +323,9 @@ class TraderClient:
         Args:
             security (str): 证券代码
             price (float): 买入价格（限价）。在回测时，如果price指定为None，将转换为市价买入
-            volume (int): 买入股票数
+            volume (int): 买入股票数（非手数）
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
-            order_time Union[str, datetime.datetime]: 下单时间。在回测模式下使用。
+            order_time: 下单时间。在回测模式下使用。
 
         Returns:
             Dict: 成交返回
@@ -321,11 +378,13 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            assert order_time is not None, "order_time is required in backtest mode"
-            if isinstance(order_time, datetime.datetime):
-                order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
-            parameters["order_time"] = order_time
+            if order_time is None:
+                raise ValueError("order_time is required in backtest mode")
+            else:
+                _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
+            parameters["order_time"] = _order_time
 
+        self._is_dirty = True
         r = post_json(url, params=parameters, headers=self.headers)
 
         for key in ("time", "created_at", "recv_at"):
@@ -339,9 +398,9 @@ class TraderClient:
         security: str,
         volume: int,
         order_type: OrderType = OrderType.MARKET,
-        limit_price: float = None,
+        limit_price: Optional[float] = None,
         timeout: float = 0.5,
-        order_time: Union[str, datetime.datetime] = None,
+        order_time: Optional[datetime.datetime] = None,
         **kwargs,
     ) -> Dict:
         """市价买入股票
@@ -359,7 +418,7 @@ class TraderClient:
             order_type (OrderType, optional): 市价买入类型，缺省为五档成交剩撤.
             limit_price (float, optional): 剩余转限价的模式下，设置的限价
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
-            order_time Union[str, datetime.datetime]: 下单时间。在回测模式下使用。
+            order_time: 下单时间。在回测模式下使用。
 
         Returns:
             Dict: 成交返回，详见`buy`方法
@@ -380,11 +439,13 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            assert order_time is not None, "order_time is required in backtest mode"
-            if isinstance(order_time, datetime.datetime):
-                order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
-            parameters["order_time"] = order_time
+            if order_time is None:
+                raise ValueError("order_time is required in backtest mode")
 
+            _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
+            parameters["order_time"] = _order_time
+
+        self._is_dirty = True
         r = post_json(url, params=parameters, headers=self.headers)
 
         for key in ("time", "created_at", "recv_at"):
@@ -399,7 +460,7 @@ class TraderClient:
         price: float,
         volume: int,
         timeout: float = 0.5,
-        order_time: Union[str, datetime.datetime] = None,
+        order_time: Optional[datetime.datetime] = None,
         **kwargs,
     ) -> Union[List, Dict]:
         """以限价方式卖出股票
@@ -412,7 +473,7 @@ class TraderClient:
             price (float): 买入价格（限价）。在回测中如果指定为None,将转换为市价卖出
             volume (int): 买入股票数
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
-            order_time Union[str, datetime.datetime]: 下单时间。在回测模式下使用。
+            order_time: 下单时间。在回测模式下使用。
 
         Returns:
             Union[List, Dict]: 成交返回，详见`buy`方法，trade server只返回一个委托单信息
@@ -428,11 +489,12 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            assert order_time is not None, "order_time is required in backtest mode"
+            raise ValueError("order_time is required in backtest mode")
             if isinstance(order_time, datetime.datetime):
-                order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
-            parameters["order_time"] = order_time
+                _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
+            parameters["order_time"] = _order_time
 
+        self._is_dirty = True
         r = post_json(url, params=parameters, headers=self.headers)
         for key in ("created_at", "recv_at"):
             if key in r:
@@ -449,9 +511,9 @@ class TraderClient:
         security: str,
         volume: int,
         order_type: OrderType = OrderType.MARKET,
-        limit_price: float = None,
+        limit_price: Optional[float] = None,
         timeout: float = 0.5,
-        order_time: Union[str, datetime.datetime] = None,
+        order_time: Optional[datetime.datetime] = None,
         **kwargs,
     ) -> Union[List, Dict]:
         """市价卖出股票
@@ -469,7 +531,7 @@ class TraderClient:
             order_type (OrderType, optional): 市价卖出类型，缺省为五档成交剩撤.
             limit_price (float, optional): 剩余转限价的模式下，设置的限价
             timeout (float, optional): 默认等待交易反馈的超时为0.5秒
-            order_time Union[str, datetime.datetime]: 下单时间。在回测模式下使用。
+            order_time: 下单时间。在回测模式下使用。
         Returns:
             Union[List, Dict]: 成交返回，详见`buy`方法，trade server只返回一个委托单信息
         """
@@ -485,11 +547,12 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            assert order_time is not None, "order_time is required in backtest mode"
-            if isinstance(order_time, datetime.datetime):
-                order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
-            parameters["order_time"] = order_time
+            raise ValueError("order_time is required in backtest mode")
 
+            _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
+            parameters["order_time"] = _order_time
+
+        self._is_dirty = True
         r = post_json(url, params=parameters, headers=self.headers)
         for key in ("time", "created_at", "recv_at"):
             if key in r:
@@ -497,13 +560,57 @@ class TraderClient:
 
         return r
 
+    async def _get_market_sell_price(
+        self, sec: str, order_time: Optional[datetime.datetime] = None
+    ) -> float:
+        """获取当前股票的市价卖出价格
+
+        如果无法取得跌停价，则以当前价卖出。
+        """
+        from coretype import FrameType
+        from omicron.models.stock import Stock
+
+        order_time = order_time or datetime.datetime.now()
+        frame = order_time.date()
+        limit_prices = await Stock.get_trade_price_limits(sec, frame, frame)
+        if len(limit_prices) >= 0:
+            price = limit_prices["low_limit"][0]
+        else:
+            price = (await Stock.get_bars(sec, 1, FrameType.MIN1, end=order_time))[
+                "close"
+            ][0]
+
+        return price
+
+    async def _get_market_buy_price(
+        self, sec: str, order_time: Optional[datetime.datetime] = None
+    ) -> float:
+        """获取当前股票的市价买入价格
+
+        如果无法取得涨停价，则以当前价买入。
+        """
+        from coretype import FrameType
+        from omicron.models.stock import Stock
+
+        order_time = order_time or datetime.datetime.now()
+        frame = order_time.date()
+        limit_prices = await Stock.get_trade_price_limits(sec, frame, frame)
+        if len(limit_prices) >= 0:
+            price = limit_prices["high_limit"][0]
+        else:
+            price = (await Stock.get_bars(sec, 1, FrameType.MIN1, end=order_time))[
+                "close"
+            ][0]
+
+        return price
+
     def sell_percent(
         self,
         security: str,
         price: float,
         percent: float,
-        timeout: int = 0.5,
-        order_time: Union[str, datetime.datetime] = None,
+        timeout: float = 0.5,
+        order_time: Optional[datetime.datetime] = None,
         **kwargs,
     ) -> Union[List, Dict]:
         """按比例卖出特定的股票（基于可卖股票数），比例的数字由调用者提供
@@ -522,9 +629,9 @@ class TraderClient:
             Union[List, Dict]: 股票卖出委托单的详细信息，于sell指令相同
         """
         if percent <= 0 or percent > 1:
-            return None
+            raise ValueError(f"percent should between [0, 1]")
         if len(security) < 6:
-            return None
+            raise ValueError(f"wrong security format {security}")
 
         url = self._cmd_url("sell_percent")
         parameters = {
@@ -535,11 +642,12 @@ class TraderClient:
         }
 
         if self._is_backtest:
-            assert order_time is not None, "order_time is required in backtest mode"
+            raise ValueError("order_time is required in backtest mode")
             if isinstance(order_time, datetime.datetime):
-                order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
-            parameters["order_time"] = order_time
+                _order_time = order_time.strftime("%Y-%m-%d %H:%M:%S")
+            parameters["order_time"] = _order_time
 
+        self._is_dirty = True
         r = post_json(url, params=parameters, headers=self.headers)
         for key in ("time", "created_at", "recv_at"):
             if key in r:
@@ -560,18 +668,19 @@ class TraderClient:
             List: 所有卖出股票的委托单信息，于sell指令相同
         """
         if percent <= 0 or percent > 1:
-            return None
+            raise ValueError(f"percent should between [0, 1]")
 
         url = self._cmd_url("sell_all")
         parameters = {"percent": percent, "timeout": timeout}
 
+        self._is_dirty = True
         return post_json(url, params=parameters, headers=self.headers)
 
     def metrics(
         self,
-        start: datetime.date = None,
-        end: datetime.date = None,
-        baseline: str = None,
+        start: Optional[datetime.date] = None,
+        end: Optional[datetime.date] = None,
+        baseline: Optional[str] = None,
     ) -> Dict:
         """获取指定时间段[start, end]间的账户指标评估数据
 
@@ -631,8 +740,8 @@ class TraderClient:
 
     def get_assets(
         self,
-        start: Union[str, datetime.date] = None,
-        end: Union[str, datetime.date] = None,
+        start: Optional[datetime.date] = None,
+        end: Optional[datetime.date] = None,
     ) -> np.ndarray:
         """获取账户在[start, end]时间段内的资产信息。
 
@@ -646,7 +755,9 @@ class TraderClient:
             np.ndarray: 账户在[start, end]时间段内的资产信息，是一个dtype为[rich_assets_dtype](https://zillionare.github.io/backtesting/0.4.0/api/trade/#backtest.trade.datatypes.rich_assets_dtype)的numpy structured array
         """
         url = self._cmd_url("assets")
-        return get(url, headers=self.headers, params={"start": start, "end": end})
+        _start = start.strftime("%Y-%m-%d") if start else None
+        _end = end.strftime("%Y-%m-%d") if end else None
+        return get(url, headers=self.headers, params={"start": _start, "end": _end})
 
     def stop_backtest(self):
         """停止回测。
