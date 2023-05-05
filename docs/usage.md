@@ -5,7 +5,7 @@ from traderclient import TraderClient
 import uuid
 
 # 请指向zillionare trader server或者backtest server
-url = "http://localhost:7080/trader/api/v0.3"
+url = "http://localhost:7080/trader/api/v0.4"
 account = "test-account"
 token = uuid.uuid4().hex
 client: TraderClient = TraderClient(url, account, token)
@@ -28,7 +28,7 @@ from traderclient import TraderClient
 import uuid
 import datetime
 
-url = "http://backtest_server:7080/backtest/api/trade/v0.3/"
+url = "http://backtest_server:7080/backtest/api/trade/v0.4/"
 
 # to start a new backtest, please always generate a new account and token
 token = uuid.uuid4().hex
@@ -39,7 +39,7 @@ client: TraderClient = TraderClient(url, account, token, is_backtest=True, start
 
 code = "000001.XSHE"
 # please specify order_time if it's backtest mode
-r = client.buy(code, 9.5, 100, order_time="2022-03-07 09:31:00")
+r = client.buy(code, 9.5, 100, order_time=datetime.datetime(2022,3,7,9,31))
 print(r)
 ```
 注意在回测模式下，您可以指定本金和手续费，但计算alpha等指标使用的risk_free利率则是在回测服务器上配置的，以便您可以比较不同策略的数据表现。
@@ -62,13 +62,13 @@ print(r)
 
 ## 交易
 
-您可以通过[buy][traderclient.client.TraderClient.buy], [market_buy][traderclient.client.TraderClient.market_buy], [sell][traderclient.client.TraderClient.sell], [market_sell][traderclient.client.TraderClient.market_sell]和[sell_percent][traderclient.client.TraderClient.sell_percent]来进行交易。
+您可以通过[buy][traderclient.client.TraderClient.buy], [market_buy][traderclient.client.TraderClient.market_buy], [async buy_by_money][traderclient.client.TraderClient.buy_by_money], [sell][traderclient.client.TraderClient.sell], [market_sell][traderclient.client.TraderClient.market_sell]和[sell_percent][traderclient.client.TraderClient.sell_percent]来进行交易。
 
 ## 状态跟踪
 
 您可以通过[info][traderclient.client.TraderClient.info]来查看账户的基本信息，比如当前总资产、持仓、本金、盈利等。如果您只想得到单个信息，您也可以使用[principal][traderclient.client.TraderClient.principal]、[balance][traderclient.client.TraderClient.balance]、[available_money][traderclient.client.TraderClient.available_money]来获取。
 
-[positions][traderclient.client.TraderClient.positions]提供了持仓信息，您还可以通过[available_shares][traderclient.client.TraderClient.available_shares]来查询个股当前可售的股票数量。
+[positions][traderclient.client.TraderClient.positions], [get_positions][traderclient.client.TraderClient.get_positions]提供了持仓信息，您还可以通过[available_shares][traderclient.client.TraderClient.available_shares]来查询个股当前可售的股票数量。
 
 [bills][traderclient.client.TraderClient.bills]来查看账户的持仓、交易历史记录。
 ## 策略评估

@@ -5,6 +5,7 @@
 import datetime
 import unittest
 import uuid
+from unittest import mock
 
 import arrow
 import httpx
@@ -20,14 +21,14 @@ endpoint = rsp.json()["endpoint"]
 url = f"http://localhost:3180{endpoint}/"
 
 
-class TraderClientWithBacktestServerTest(unittest.TestCase):
-    def setUp(self):
+class TraderClientWithBacktestServerTest(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
         enable_logging("info")
 
         start = datetime.date(2022, 3, 1)
         end = datetime.date(2022, 3, 14)
         try:
-            TraderClient.delete_account(self.url, "test", "test")
+            TraderClient.delete_account(url, "test", "test")
         except:
             pass
 
@@ -41,8 +42,27 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
             end=end,
         )
 
-    def tearDown(self) -> None:
-        return super().tearDown()
+    async def asyncTearDown(self):
+        return super().asyncTearDown()
+
+    async def _setup_omicron(self):
+        import os
+
+        import cfg4py
+        import omicron
+        from omicron.core.errors import DataNotReadyError
+
+        from tests.helper import data_populate
+
+        config_dir = os.path.join(os.path.dirname(__file__), "data")
+        cfg4py.init(config_dir)
+
+        try:
+            await omicron.init()
+        except DataNotReadyError:
+            pass
+
+        await data_populate()
 
     def test_buy(self):
         date = datetime.datetime(2022, 3, 1, 10, 4)
@@ -227,3 +247,34 @@ class TraderClientWithBacktestServerTest(unittest.TestCase):
 
     def test_stop_backtest(self):
         self.client.stop_backtest()
+
+    async def test_buy_by_money(self):
+        await self._setup_omicron()
+
+        date = datetime.datetime(2022, 3, 1, 10, 4)
+
+        # fixed priced
+        r = await self.client.buy_by_money("002537.XSHE", 5000, 10, order_time=date)
+
+        self.assertEqual(r["security"], "002537.XSHE")
+        self.assertAlmostEqual(r["price"], 9.42, 2)
+        self.assertEqual(r["filled"], 500)
+        self.assertEqual(r["time"], date)
+
+        # first call, info should be invoked
+        self.assertAlmostEqual(self.client.available_money, 995289.53, 2)
+        self.assertTrue(self.client._is_dirty == False)
+
+        shares = self.client.available_shares("002537.XSHE")
+        self.assertEqual(shares, 0)
+        with mock.patch("traderclient.client.TraderClient.info") as mocked:
+            # 第二次调用，不从远端取
+            self.client.available_money
+            mocked.assert_not_called()
+
+        # no price provided, market buy
+        r = await self.client.buy_by_money("002537.XSHE", 5000, order_time=date)
+        self.assertEqual(r["security"], "002537.XSHE")
+        self.assertAlmostEqual(r["price"], 9.42, 2)
+        self.assertEqual(r["filled"], 500)
+        self.assertEqual(r["time"], date)

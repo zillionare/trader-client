@@ -1,12 +1,13 @@
 """Unit test package for traderclient."""
+
 import multiprocessing
 import os
 import pickle
 import socket
+import subprocess
 import time
 import uuid
 from enum import IntEnum
-from http.client import CONFLICT, FORBIDDEN, UNAUTHORIZED
 from signal import SIGTERM
 
 import arrow
@@ -204,7 +205,7 @@ class MockServer:
         self._process = None
 
     def run(self):
-        mp = multiprocessing.get_context("fork")
+        mp = multiprocessing.get_context("spawn")
         self._process = mp.Process(target=self._run_server)
         self._process.daemon = True
         self._process.start()
@@ -220,7 +221,7 @@ class MockServer:
 
     def _run_server(self):
         print("Running server")
-        app.run(host=self.host, port=self.port)
+        app.run(host=self.host, port=self.port, single_process=True)
 
     def stop(self):
         os.kill(self._process.pid, SIGTERM)

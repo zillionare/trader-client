@@ -160,9 +160,8 @@ class TraderClient:
             float: 账户可用资金
         """
         if self._is_dirty or self._cash is None:
-            url = self._cmd_url("info")
-            r = get(url, headers=self.headers)
-            self._cash = r.get("available")
+            info = self.info()
+            self._cash = info.get("available")
 
         return self._cash
 
@@ -570,7 +569,7 @@ class TraderClient:
 
         如果无法取得跌停价，则以当前价卖出。
         """
-        from coretype import FrameType
+        from coretypes import FrameType
         from omicron.models.stock import Stock
 
         order_time = order_time or datetime.datetime.now()
@@ -592,7 +591,7 @@ class TraderClient:
 
         如果无法取得涨停价，则以当前价买入。
         """
-        from coretype import FrameType
+        from coretypes import FrameType
         from omicron.models.stock import Stock
 
         order_time = order_time or datetime.datetime.now()
