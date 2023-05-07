@@ -65,7 +65,7 @@ def process_response_result(rsp: httpx.Response, cmd: Optional[str] = None) -> A
         rsp.raise_for_status()
 
 
-def get(url, params:Optional[dict]=None, headers=None) -> Any:
+def get(url, params: Optional[dict] = None, headers=None) -> Any:
     """发送GET请求到上游服务接口
 
     Args:
@@ -109,7 +109,7 @@ def post_json(url, params=None, headers=None) -> Any:
     return result
 
 
-def delete(url, params: Optional[Dict]=None, headers=None) -> Any:
+def delete(url, params: Optional[Dict] = None, headers=None) -> Any:
     """从服务器上删除资源
 
     Args:

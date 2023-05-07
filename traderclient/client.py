@@ -582,7 +582,7 @@ class TraderClient:
                 "close"
             ][0]
 
-        return price
+        return price.item()
 
     async def _get_market_buy_price(
         self, sec: str, order_time: Optional[datetime.datetime] = None
@@ -604,7 +604,7 @@ class TraderClient:
                 "close"
             ][0]
 
-        return price
+        return price.item()
 
     def sell_percent(
         self,
