@@ -179,19 +179,7 @@ class TraderClient:
         r = get(url, headers=self.headers)
         return r.get("principal")
 
-    @property
-    def positions(self):
-        """当前账户最新持仓"""
-        if self._is_dirty or self._positions is None:
-            url = self._cmd_url("positions")
-
-            r = get(url, headers=self.headers)
-
-            self._positions = r
-
-        return self._positions
-
-    def get_positions(self, dt: Optional[datetime.date] = None) -> np.ndarray:
+    def positions(self, dt: Optional[datetime.date] = None) -> np.ndarray:
         """取该子账户当前持仓信息
 
         Warning:
@@ -202,29 +190,31 @@ class TraderClient:
         Returns:
             np.ndarray: dtype为[position_dtype](https://zillionare.github.io/backtesting/0.3.2/api/trade/#backtest.trade.datatypes.position_dtype)的numpy structured array
         """
-        url = self._cmd_url("positions")
+        if self._is_backtest and dt is None:
+            raise ValueError("`dt` is required under backtest mode")
 
-        r = get(url, params={"date": dt}, headers=self.headers)
+        url = self._cmd_url("positions")
+        r = get(url, params={"date": dt.isoformat() if dt is not None else None}, headers=self.headers)
 
         return r
 
-    def available_shares(self, security: str) -> int:
-        """返回某支股票当前可用数量
-
-        在回测模式下，使用持仓表最后一日的记录进行过滤。
+    def available_shares(
+        self, security: str, dt: Optional[datetime.date] = None
+    ) -> float:
+        """返回某支股票在`dt`日的可售数量
 
         Args:
             security: 股票代码
+            dt: 持仓查询日期。在实盘下可为None，表明取最新持仓。
 
         Returns:
-            int: 指定股票今日可卖数量，无可卖即为0
+            float: 指定股票在`dt`日可卖数量，无可卖即为0
         """
+        if self._is_backtest and dt is None:
+            raise ValueError("`dt` is required under backtest!")
+
         if self._is_dirty or self._positions is None:
-            url = self._cmd_url("positions")
-
-            r = get(url, headers=self.headers)
-
-            self._positions = r
+            self._positions = self.positions(dt)
             # 此时持仓虽然同步了，但其它数据，比如cash并未同步，所以不能更改_is_dirty状态
 
         found = self._positions[self._positions["security"] == security]
@@ -289,7 +279,7 @@ class TraderClient:
         """按金额买入股票。
 
         Returns:
-            参考[buy][traderclient.client.buy]
+            参考[buy][traderclient.client.TraderClient.buy]
         """
         order_time = order_time or datetime.datetime.now()
 
@@ -631,7 +621,7 @@ class TraderClient:
             Union[List, Dict]: 股票卖出委托单的详细信息，于sell指令相同
         """
         if percent <= 0 or percent > 1:
-            raise ValueError(f"percent should between [0, 1]")
+            raise ValueError("percent should between [0, 1]")
         if len(security) < 6:
             raise ValueError(f"wrong security format {security}")
 
@@ -671,7 +661,7 @@ class TraderClient:
             List: 所有卖出股票的委托单信息，于sell指令相同
         """
         if percent <= 0 or percent > 1:
-            raise ValueError(f"percent should between [0, 1]")
+            raise ValueError("percent should between [0, 1]")
 
         url = self._cmd_url("sell_all")
         parameters = {"percent": percent, "timeout": timeout}

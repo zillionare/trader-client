@@ -35,3 +35,6 @@
 * 回测中所有需要`order_time`参数的地方，其类型都去掉`str`类型，只接受`datetime.datetime`。
 * 性能改进。在调用`available_money`, `positions`和`available_shares`时，如果距上次调用后，中间未发生可能导致持仓变化的操作（比如买、卖和撤销等），则这些方法将不会从远程同步信息，而是仅使用本地已保存的信息。
 
+## 0.4.2 (2023-5-9)
+* 将positions属性改回为方法，在回测模式下，必须传入日期。
+* `available_shares`方法增加`dt`参数，在回测模式下，必须传入日期。

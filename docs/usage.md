@@ -80,9 +80,8 @@ print(r)
 * [principal 属性][traderclient.client.TraderClient.principal] 得到本金信息
 * [balance][traderclient.client.TraderClient.balance] 得到账户信息，包括现金，股票市值，总资产，盈亏（绝对值），盈亏率（百分比）
 * [available_money 属性][traderclient.client.TraderClient.available_money] 当前可用现金
-* [positions 属性][traderclient.client.TraderClient.positions] 当前持仓
-* [get_positions][traderclient.client.TraderClient.get_positions] 获取某一天的持仓
-* [available_shares][traderclient.client.TraderClient.available_shares] 来查询某个股当前可售的股票数量。
+* [positions][traderclient.client.TraderClient.positions] 获取某一天的持仓
+* [available_shares][traderclient.client.TraderClient.available_shares] 来查询某个股在某个日期下可售的股票数量。
 
 [bills][traderclient.client.TraderClient.bills] 来查看账户的持仓、交易历史记录
 ## 策略评估

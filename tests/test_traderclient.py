@@ -112,29 +112,32 @@ class TraderClientWithBacktestServerTest(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(balance["ppnl"], 39.5289 / 1_000_000, 2)
 
     def test_positions(self):
-        # this also test available_shares
-        positions = self.client.positions
+        # this will test available_shares too
+        positions = self.client.positions(datetime.date(2022, 3, 1))
         self.assertEqual(0, positions.size)
 
         self.client.buy(
             "002537.XSHE", 10, 500, order_time=datetime.datetime(2022, 3, 1, 10, 4)
         )
 
-        positions = self.client.positions
+        positions = self.client.positions(datetime.date(2022, 3, 1))
         self.assertListEqual(positions["security"].tolist(), ["002537.XSHE"])
         self.assertListEqual(positions["shares"].tolist(), [500])
         self.assertListEqual(positions["sellable"].tolist(), [0])
         np.testing.assert_array_almost_equal(positions["price"], [9.42], decimal=2)
 
-        positions = self.client.get_positions(datetime.date(2022, 3, 7))
+        positions = self.client.positions(datetime.date(2022, 3, 7))
         self.assertListEqual(positions["security"].tolist(), ["002537.XSHE"])
         self.assertListEqual(positions["shares"].tolist(), [500])
         self.assertListEqual(positions["sellable"].tolist(), [500])
         np.testing.assert_array_almost_equal(positions["price"], [9.42], decimal=2)
 
-        # last_tradeday is still 2022, 3, 1, so the available_shares is 0
-        r = self.client.available_shares("002537.XSHE")
+        # last_trade day is still 2022, 3, 1, so the available_shares is 0
+        r = self.client.available_shares("002537.XSHE", datetime.date(2022, 3, 1))
         self.assertEqual(r, 0)
+
+        r = self.client.available_shares("002537.XSHE", datetime.date(2022, 3, 7))
+        self.assertEqual(r, 500.0)
 
     def test_market_buy(self):
         r = self.client.market_buy(
@@ -265,7 +268,7 @@ class TraderClientWithBacktestServerTest(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(self.client.available_money, 995289.53, 2)
         self.assertTrue(self.client._is_dirty == False)
 
-        shares = self.client.available_shares("002537.XSHE")
+        shares = self.client.available_shares("002537.XSHE", dt=date)
         self.assertEqual(shares, 0)
         with mock.patch("traderclient.client.TraderClient.info") as mocked:
             # 第二次调用，不从远端取
