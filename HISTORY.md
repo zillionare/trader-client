@@ -30,7 +30,8 @@
 
 ## 0.4 (2023-5-5)
 * 增加buy_by_money 函数
-* 将positions方法改为属性。此属性为当前最新的持仓。同时增加get_positions方法，以获取某个指定日期下的持仓。
+* 将positions方法改为属性。此属性为当前最新的持仓。
+* 增加get_positions方法，以获取某个指定日期下的持仓。
 * 回测中所有需要`order_time`参数的地方，其类型都去掉`str`类型，只接受`datetime.datetime`。
 * 性能改进。在调用`available_money`, `positions`和`available_shares`时，如果距上次调用后，中间未发生可能导致持仓变化的操作（比如买、卖和撤销等），则这些方法将不会从远程同步信息，而是仅使用本地已保存的信息。
 

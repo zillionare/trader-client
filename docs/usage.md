@@ -62,20 +62,34 @@ print(r)
 
 ## 交易
 
-您可以通过[buy][traderclient.client.TraderClient.buy], [market_buy][traderclient.client.TraderClient.market_buy], [async buy_by_money][traderclient.client.TraderClient.buy_by_money], [sell][traderclient.client.TraderClient.sell], [market_sell][traderclient.client.TraderClient.market_sell]和[sell_percent][traderclient.client.TraderClient.sell_percent]来进行交易。
+您可以通过
+* [buy][traderclient.client.TraderClient.buy]
+* [market_buy][traderclient.client.TraderClient.market_buy]
+* [async buy_by_money][traderclient.client.TraderClient.buy_by_money]
+* [sell][traderclient.client.TraderClient.sell]
+* [market_sell][traderclient.client.TraderClient.market_sell]
+* [sell_percent][traderclient.client.TraderClient.sell_percent]
+
+来进行交易。
 
 ## 状态跟踪
 
-您可以通过[info][traderclient.client.TraderClient.info]来查看账户的基本信息，比如当前总资产、持仓、本金、盈利等。如果您只想得到单个信息，您也可以使用[principal][traderclient.client.TraderClient.principal]、[balance][traderclient.client.TraderClient.balance]、[available_money][traderclient.client.TraderClient.available_money]来获取。
+您可以通过：
 
-[positions][traderclient.client.TraderClient.positions], [get_positions][traderclient.client.TraderClient.get_positions]提供了持仓信息，您还可以通过[available_shares][traderclient.client.TraderClient.available_shares]来查询个股当前可售的股票数量。
+* [info][traderclient.client.TraderClient.info]来查看账户的基本信息，比如当前总资产、持仓、本金、盈利等。
+* [principal 属性][traderclient.client.TraderClient.principal] 得到本金信息
+* [balance][traderclient.client.TraderClient.balance] 得到账户信息，包括现金，股票市值，总资产，盈亏（绝对值），盈亏率（百分比）
+* [available_money 属性][traderclient.client.TraderClient.available_money] 当前可用现金
+* [positions 属性][traderclient.client.TraderClient.positions] 当前持仓
+* [get_positions][traderclient.client.TraderClient.get_positions] 获取某一天的持仓
+* [available_shares][traderclient.client.TraderClient.available_shares] 来查询某个股当前可售的股票数量。
 
-[bills][traderclient.client.TraderClient.bills]来查看账户的持仓、交易历史记录。
+[bills][traderclient.client.TraderClient.bills] 来查看账户的持仓、交易历史记录
 ## 策略评估
 
 [metrics][traderclient.client.TraderClient.metrics]方法将返回策略的各项指标，比如sharpe, sortino, calmar, win rate, max drawdown等。您还可以传入一个参考标的，backtest将对参考标的也同样计算上述指标。
 
-在进行策略评估之前，推荐调用[stop_backtest][traderclient.client.TraderClient.stop_backtest]方法冻结回测结果。这样可能在后续的多次调用`metrics`时，获得更好的结果。
+在调用`metrics`之前，请先调用[stop_backtest][traderclient.client.TraderClient.stop_backtest]方法冻结回测结果。
 
 ## 超时设置
 从0.3.9起，Trader Client支持设置访问服务器的超时时间。您可以通过环境变量[TRADER_CLIENT_TIMEOUT]来设置这个超时。如果未经设置，则默认使用30秒超时，但有一个例外，即如果部分API中设置了timeout时间，且这个时间大于30秒，那么将使用API调用时设置的timeout设置。
