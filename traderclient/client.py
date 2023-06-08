@@ -62,7 +62,6 @@ class TraderClient:
 
         self._is_dirty = False
         self._cash = None
-        self._positions = None
 
     def _cmd_url(self, cmd: str) -> str:
         return f"{self._url}/{cmd}"
@@ -194,9 +193,11 @@ class TraderClient:
             raise ValueError("`dt` is required under backtest mode")
 
         url = self._cmd_url("positions")
-        r = get(url, params={"date": dt.isoformat() if dt is not None else None}, headers=self.headers)
-
-        return r
+        return get(
+            url,
+            params={"date": dt.isoformat() if dt is not None else None},
+            headers=self.headers,
+        )
 
     def available_shares(
         self, security: str, dt: Optional[datetime.date] = None
@@ -213,11 +214,9 @@ class TraderClient:
         if self._is_backtest and dt is None:
             raise ValueError("`dt` is required under backtest!")
 
-        if self._is_dirty or self._positions is None:
-            self._positions = self.positions(dt)
-            # 此时持仓虽然同步了，但其它数据，比如cash并未同步，所以不能更改_is_dirty状态
+        positions = self.positions(dt)
 
-        found = self._positions[self._positions["security"] == security]
+        found = positions[positions["security"] == security]
         if found.size == 1:
             return found["sellable"][0].item()
         elif found.size == 0:
@@ -436,6 +435,7 @@ class TraderClient:
             parameters["order_time"] = _order_time
 
         self._is_dirty = True
+
         r = post_json(url, params=parameters, headers=self.headers)
 
         for key in ("time", "created_at", "recv_at"):
@@ -545,6 +545,7 @@ class TraderClient:
             parameters["order_time"] = _order_time
 
         self._is_dirty = True
+
         r = post_json(url, params=parameters, headers=self.headers)
         for key in ("time", "created_at", "recv_at"):
             if key in r:
@@ -667,6 +668,7 @@ class TraderClient:
         parameters = {"percent": percent, "timeout": timeout}
 
         self._is_dirty = True
+
         return post_json(url, params=parameters, headers=self.headers)
 
     def metrics(
