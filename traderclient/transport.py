@@ -7,8 +7,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 from traderclient.utils import get_cmd, status_ok
-
-from .errors import TradeError
+from coretypes.errors.trade import TradeError
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +58,13 @@ def process_response_result(rsp: httpx.Response, cmd: Optional[str] = None) -> A
 
     # http 1.1 allow us to extend http status code, so we choose 499 as our error code. The upstream server is currently built on top of sanic, it doesn't support customer reason phrase (always return "Unknown Error" if the status code is extened. So we have to use body to carry on reason phrase.
     if rsp.status_code == 499:
-        logger.warning("%s failed: %s, %s", cmd, rsp.status_code, rsp.text)
-        raise TradeError(rsp.status_code, rsp.text)
+        if "json" in rsp.headers.get("Content-Type"):
+            e = TradeError.from_json(rsp.json())
+            logger.warning("%s failed: %s, %s", cmd, rsp.status_code, e.error_msg)
+            raise e
+        else:
+            logger.warning("%s failed: %s, %s", cmd, rsp.status_code, rsp.text)
+            raise TradeError(rsp.text)
     else:
         rsp.raise_for_status()
 

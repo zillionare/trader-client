@@ -10,10 +10,10 @@ from unittest import mock
 import arrow
 import httpx
 import numpy as np
+from coretypes.errors.trade import SellLimitError, TradeError
 
 from tests import assert_deep_almost_equal
 from traderclient.client import TraderClient
-from traderclient.errors import TradeError
 from traderclient.utils import enable_logging
 
 rsp = httpx.get("http://localhost:3180/")
@@ -281,3 +281,38 @@ class TraderClientWithBacktestServerTest(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(r["price"], 9.42, 2)
         self.assertEqual(r["filled"], 500)
         self.assertEqual(r["time"], date)
+
+    async def test_error_handling(self):
+        rsp = mock.MagicMock()
+        rsp.status_code = 499
+        rsp.headers.get.return_value = "application/json"
+        rsp.json.return_value = {
+            "error_code": 4004,
+            "msg": "不能在跌停板上卖出000001, 2019-03-18",
+            "stack": "line1\nlin2",
+        }
+        with mock.patch("httpx.post", return_value=rsp):
+            with self.assertRaises(SellLimitError) as cm:
+                await self.client.sell_percent(
+                    "000001",
+                    9.2,
+                    1.0,
+                    order_time=datetime.datetime(2022, 9, 12, 14, 57),
+                )
+
+            self.assertTrue(isinstance(cm.exception, SellLimitError))
+            self.assertEqual(cm.exception.error_msg, "不能在跌停板上卖出000001, ")
+
+        rsp.headers.get.return_value = "plain text/html"
+        rsp.text = "不能在跌停板上卖出000001, 2019-03-18"
+        with mock.patch("httpx.post", return_value=rsp):
+            with self.assertRaises(TradeError) as cm:
+                await self.client.sell_percent(
+                    "000001",
+                    9.2,
+                    1.0,
+                    order_time=datetime.datetime(2022, 9, 12, 14, 57),
+                )
+
+            self.assertTrue(isinstance(cm.exception, TradeError))
+            self.assertEqual(cm.exception.error_msg, "不能在跌停板上卖出000001, 2019-03-18")

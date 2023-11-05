@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class TraderClient:
     """大富翁实盘和回测的客户端。
 
-    在使用客户端时，需要先构建客户端实例，再调用其他方法，并处理[traderclient.errors.TradeError][]的异常，可以通过`status_code`和`message`来获取错误信息。如果是回测模式，一般会在回测结束时调用`metrics`方法来查看策略评估结果。如果要进一步查看信息，可以调用`bills`方法来获取历史持仓、交易记录和每日资产数据。
+    在使用客户端时，需要先构建客户端实例，再调用其他方法，并处理[coretypes.errors.trade.*][https://zillionare.github.io/core-types/latest/#22-trade-errors]的异常，可以通过异常对象的`error_code`和`error_msg`来获取错误信息。如果是回测模式，一般会在回测结束时调用`metrics`方法来查看策略评估结果。如果要进一步查看信息，可以调用`bills`方法来获取历史持仓、交易记录和每日资产数据。
 
     !!! Warn
         此类实例既非线程安全，也非异步事件安全。即你不能在多个线程中，或者多个异步队列中使用它。
