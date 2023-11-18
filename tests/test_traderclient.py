@@ -10,7 +10,7 @@ from unittest import mock
 import arrow
 import httpx
 import numpy as np
-from coretypes.errors.trade import SellLimitError, TradeError
+from coretypes.errors.trade import BuylimitError, SellLimitError, TradeError
 
 from tests import assert_deep_almost_equal
 from traderclient.client import TraderClient
@@ -75,6 +75,10 @@ class TraderClientWithBacktestServerTest(unittest.IsolatedAsyncioTestCase):
 
         # no excpetion is ok
         r = self.client.buy("002537.XSHE", 10, 500, order_time=date)
+
+        with self.assertRaises(BuylimitError) as cm:
+            self.client.buy("002537.XSHE", 10.5, 500, order_time=datetime.datetime(2022, 3, 2, 14, 55))
+        
 
     def test_info(self):
         # this also test available_money, balance
@@ -206,6 +210,7 @@ class TraderClientWithBacktestServerTest(unittest.IsolatedAsyncioTestCase):
             hljh, 9.1, 5000, order_time=datetime.datetime(2022, 3, 14, 15, 0)
         )
 
+        self.client.stop_backtest()
         actual = self.client.metrics(baseline=hljh)
         exp = {
             "start": datetime.date(2022, 3, 1),
@@ -223,13 +228,14 @@ class TraderClientWithBacktestServerTest(unittest.IsolatedAsyncioTestCase):
             "annual_return": -0.010133682791748755,
             "volatility": 0.02850594795764624,
             "baseline": {
-                "code": "002537.XSHE",
-                "win_rate": 0.5555555555555556,
-                "sharpe": 0.6190437353475076,
-                "max_drawdown": -0.17059373779725692,
-                "sortino": 1.0015572769806516,
-                "annual_return": 0.19278435493450163,
                 "total_profit_rate": 0.006315946578979492,
+                "win_rate": 0.5555555555555556,
+                "mean_return": 0.0028306511,
+                "sharpe": 0.6190437353475076,
+                "sortino": 1.0015572769806516,
+                "calmar": 1.1300787322194514,
+                "max_drawdown": -0.17059373779725692,
+                "annual_return": 0.19278435493450163,
                 "volatility": 1.1038380776228978,
             },
         }
